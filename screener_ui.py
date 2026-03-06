@@ -118,18 +118,16 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# 特徴量分析レポートへのリンク
+# 特徴量分析レポートへのリンク（別ページへ案内する）
 _report_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results", "feature_analysis_report.html")
 if os.path.exists(_report_path):
-    with open(_report_path, "r", encoding="utf-8") as _f:
-        _report_html = _f.read()
-    # 「レポートを見る」ボタン → 押すとページ内にレポートを展開する
-    _col_spacer, _col_btn = st.columns([3, 1])
-    with _col_btn:
-        _show_report = st.button("📈 特徴量分析レポートを見る", use_container_width=True)
-    if _show_report:
-        import streamlit.components.v1 as components
-        components.html(_report_html, height=800, scrolling=True)
+    st.markdown(
+        '<div style="text-align:right;margin-bottom:1rem">'
+        '<span style="color:#94a3b8;font-size:0.9rem">'
+        '👈 左サイドバーの「📈 特徴量分析レポート」ページでレポート全画面表示'
+        '</span></div>',
+        unsafe_allow_html=True,
+    )
 
 # =====================================================
 # サイドバー（設定パネル）
