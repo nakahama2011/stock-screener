@@ -1,0 +1,57 @@
+{
+  "generated_at": "2026-02-22 01:36:16",
+  "csv_path": "/Users/nakahamahirotaka/Desktop/Antigravity/001/results/backtest_20250106_20250110_20260222_013616.csv",
+  "n_signals": 63,
+  "n_valid": 63,
+  "n_dates": 4,
+  "n_tickers": 20,
+  "hit_threshold_pct": 2.0,
+  "avg_ret_1d": -1.111,
+  "win_rate_1d": 15.9,
+  "hit_rate_1d": 3.2,
+  "hit_rates_by_day": {
+    "1d": 3.2,
+    "2d": 1.6,
+    "3d": 1.6,
+    "5d": 3.2
+  },
+  "ret_stats_by_day": {
+    "ret_1d": {
+      "mean": -1.111,
+      "median": -0.95,
+      "win_rate": 15.9,
+      "max": 5.125,
+      "min": -9.21
+    },
+    "ret_2d": {
+      "mean": -2.144,
+      "median": -1.726,
+      "win_rate": 7.9,
+      "max": 3.027,
+      "min": -12.428
+    },
+    "ret_3d": {
+      "mean": -2.835,
+      "median": -2.922,
+      "win_rate": 9.5,
+      "max": 6.56,
+      "min": -11.416
+    },
+    "ret_5d": {
+      "mean": -3.297,
+      "median": -2.813,
+      "win_rate": 11.1,
+      "max": 4.444,
+      "min": -9.73
+    }
+  },
+  "top_tickers": [
+    {
+      "ticker": 6857,
+      "name": "アドバンテスト",
+      "hit_count": 2,
+      "avg_ret": 4.277,
+      "signal_count": 2
+    }
+  ]
+}

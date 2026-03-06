@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>バックテスト結果 | レベル1検証</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0e17;
+      --bg-secondary: #111827;
+      --bg-card: #1a2332;
+      --bg-card-hover: #1f2b3d;
+      --border: #2a3a4e;
+      --text-primary: #e8edf5;
+      --text-secondary: #8899aa;
+      --text-muted: #5a6a7a;
+      --blue: #3b82f6;
+      --cyan: #06b6d4;
+      --green: #10b981;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+      --grad: linear-gradient(135deg, #3b82f6, #06b6d4);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', 'Noto Sans JP', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ヘッダー */
+    .header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 1.2rem 2rem;
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+    .header-inner {
+      max-width: 1500px; margin: 0 auto;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .header h1 {
+      font-size: 1.4rem; font-weight: 700;
+      background: var(--grad);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .header-right { display: flex; gap: 1rem; align-items: center; }
+    .badge {
+      background: rgba(6,182,212,0.15); border: 1px solid rgba(6,182,212,0.35);
+      color: var(--cyan); padding: 0.2rem 0.6rem; border-radius: 6px;
+      font-size: 0.78rem; font-weight: 700;
+    }
+    .btn-link {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      padding: 0.4rem 0.9rem; background: rgba(59,130,246,0.12);
+      border: 1px solid rgba(59,130,246,0.35); color: var(--blue);
+      border-radius: 8px; font-size: 0.82rem; font-weight: 600;
+      cursor: pointer; text-decoration: none; transition: all 0.2s;
+    }
+    .btn-link:hover { background: rgba(59,130,246,0.25); }
+
+    /* メイン */
+    .main { max-width: 1500px; margin: 0 auto; padding: 2rem; }
+
+    /* 条件サマリーバー */
+    .condition-bar {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 0.9rem 1.5rem; margin-bottom: 1.5rem;
+      display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;
+    }
+    .condition-bar .label { color: var(--text-muted); font-size: 0.8rem; }
+    .condition-bar .val { color: var(--text-primary); font-weight: 600; font-size: 0.9rem; }
+    .cond-sep { color: var(--border); }
+
+    /* KPIカード */
+    .kpi-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem; margin-bottom: 2rem;
+    }
+    .kpi-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.25rem 1.5rem;
+      transition: all 0.3s; position: relative; overflow: hidden;
+    }
+    .kpi-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--grad); opacity: 0; transition: opacity 0.3s;
+    }
+    .kpi-card:hover { background: var(--bg-card-hover); box-shadow: 0 0 30px rgba(59,130,246,0.12); transform: translateY(-2px); }
+    .kpi-card:hover::before { opacity: 1; }
+    .kpi-label { color: var(--text-secondary); font-size: 0.78rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem; }
+    .kpi-value { font-size: 1.8rem; font-weight: 700; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .kpi-sub { color: var(--text-muted); font-size: 0.75rem; margin-top: 0.2rem; }
+    .kpi-value.green { background: linear-gradient(135deg, #10b981, #06b6d4); -webkit-background-clip: text; background-clip: text; }
+    .kpi-value.yellow { background: linear-gradient(135deg, #f59e0b, #f97316); -webkit-background-clip: text; background-clip: text; }
+
+    /* セクションタイトル */
+    .section-title {
+      font-size: 1rem; font-weight: 700; color: var(--text-primary);
+      margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;
+    }
+    .section-title::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    /* リターン統計テーブル（横並び） */
+    .ret-stats-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem; margin-bottom: 2rem;
+    }
+    .ret-stat-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1rem 1.2rem;
+    }
+    .ret-stat-title { color: var(--cyan); font-size: 0.85rem; font-weight: 700; margin-bottom: 0.6rem; }
+    .ret-stat-row { display: flex; justify-content: space-between; font-size: 0.82rem; margin: 0.2rem 0; }
+    .ret-stat-row .k { color: var(--text-secondary); }
+    .ret-stat-row .v { color: var(--text-primary); font-weight: 600; }
+    .ret-stat-row .v.pos { color: var(--green); }
+    .ret-stat-row .v.neg { color: var(--red); }
+
+    /* 上位銘柄テーブル */
+    .top-ticker-table { width: 100%; border-collapse: collapse; }
+    .top-ticker-table th {
+      background: var(--bg-secondary); padding: 0.7rem 1rem;
+      font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border); text-align: left;
+    }
+    .top-ticker-table td { padding: 0.7rem 1rem; font-size: 0.87rem; border-bottom: 1px solid rgba(42,58,78,0.4); }
+    .top-ticker-table tr:hover td { background: var(--bg-card-hover); }
+    .rank { color: var(--text-muted); text-align: center; font-weight: 700; }
+    .rank.top3 { color: var(--yellow); }
+    .code-cell { color: var(--blue); font-weight: 700; font-family: monospace; }
+    .hit-bar-wrap { display: flex; align-items: center; gap: 0.5rem; }
+    .hit-bar { height: 6px; border-radius: 3px; background: var(--grad); min-width: 4px; }
+
+    /* 詳細テーブル */
+    .table-wrap {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; margin-bottom: 2rem;
+    }
+    .table-toolbar {
+      padding: 0.9rem 1.2rem; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;
+    }
+    .table-toolbar h2 { font-size: 1rem; font-weight: 600; }
+    .toolbar-right { display: flex; gap: 0.75rem; align-items: center; }
+    .search-box {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.45rem 0.9rem; color: var(--text-primary);
+      font-size: 0.82rem; width: 200px; outline: none; transition: border-color 0.3s;
+    }
+    .search-box:focus { border-color: var(--blue); }
+    .search-box::placeholder { color: var(--text-muted); }
+    .filter-select {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.45rem 0.7rem; color: var(--text-primary);
+      font-size: 0.82rem; outline: none; cursor: pointer;
+    }
+    .detail-table { width: 100%; border-collapse: collapse; }
+    .detail-table th {
+      background: var(--bg-secondary); padding: 0.7rem 0.8rem;
+      font-size: 0.72rem; font-weight: 600; color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--border); cursor: pointer; user-select: none;
+      white-space: nowrap; text-align: right;
+    }
+    .detail-table th:first-child,
+    .detail-table th:nth-child(2),
+    .detail-table th:nth-child(3) { text-align: left; }
+    .detail-table th:hover { color: var(--blue); }
+    .detail-table th .si { margin-left: 0.2rem; opacity: 0.3; }
+    .detail-table th.sorted .si { opacity: 1; color: var(--blue); }
+    .detail-table td {
+      padding: 0.65rem 0.8rem; font-size: 0.82rem;
+      border-bottom: 1px solid rgba(42,58,78,0.3); text-align: right; white-space: nowrap;
+    }
+    .detail-table td:first-child,
+    .detail-table td:nth-child(2),
+    .detail-table td:nth-child(3) { text-align: left; }
+    .detail-table tr:hover td { background: var(--bg-card-hover); }
+    .ret-pos { color: var(--green); font-weight: 600; }
+    .ret-neg { color: var(--red); font-weight: 600; }
+    .hit-badge {
+      display: inline-block; padding: 0.1rem 0.4rem;
+      border-radius: 4px; font-size: 0.72rem; font-weight: 700;
+    }
+    .hit-1 { background: rgba(16,185,129,0.2); color: var(--green); }
+    .hit-0 { background: rgba(239,68,68,0.15); color: var(--red); }
+    .hit-na { color: var(--text-muted); }
+
+    /* ページネーション */
+    .pagination {
+      display: flex; justify-content: center; align-items: center; gap: 0.5rem;
+      padding: 1rem; border-top: 1px solid var(--border);
+    }
+    .page-btn {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      color: var(--text-secondary); padding: 0.35rem 0.7rem; border-radius: 6px;
+      cursor: pointer; font-size: 0.8rem; transition: all 0.2s;
+    }
+    .page-btn:hover, .page-btn.active {
+      background: var(--blue); border-color: var(--blue); color: #fff;
+    }
+    .page-info { color: var(--text-muted); font-size: 0.8rem; }
+
+    /* フッター */
+    .footer { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.78rem; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    tbody tr { animation: fadeIn 0.2s ease; }
+
+    /* 日付別集計テーブル */
+    .date-summary-table { width: 100%; border-collapse: collapse; }
+    .date-summary-table th {
+      background: var(--bg-secondary);
+      padding: 0.65rem 0.9rem;
+      font-size: 0.73rem; font-weight: 700; color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border); white-space: nowrap; text-align: center;
+    }
+    .date-summary-table th:first-child { text-align: left; width: 120px; }
+    .date-summary-table td {
+      padding: 0.7rem 0.9rem; font-size: 0.88rem;
+      border-bottom: 1px solid rgba(42,58,78,0.4);
+      text-align: center; white-space: nowrap;
+    }
+    .date-summary-table td:first-child { text-align: left; font-weight: 600; font-family: monospace; color: var(--cyan); }
+    .date-summary-table tr:hover td { background: var(--bg-card-hover); }
+    .hm-cell {
+      display: inline-block; border-radius: 6px;
+      padding: 0.2rem 0.7rem; font-weight: 700; font-size: 0.85rem;
+      min-width: 70px;
+    }
+    /* ミニ棒グラフ */
+    .mini-chart-wrap {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.2rem 1.5rem; margin-bottom: 2rem;
+      overflow-x: auto;
+    }
+    .mini-chart {
+      display: flex; align-items: flex-end; gap: 6px; height: 80px;
+      min-width: max-content;
+    }
+    .mini-bar-col { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .mini-bar {
+      width: 42px; border-radius: 3px 3px 0 0;
+      transition: opacity 0.2s;
+    }
+    .mini-bar:hover { opacity: 0.75; }
+    .mini-bar-label { font-size: 0.62rem; color: var(--text-muted); white-space: nowrap; }
+    .mini-bar-val { font-size: 0.65rem; font-weight: 700; }
+
+    @media (max-width: 768px) {
+      .main { padding: 1rem; }
+      .header-inner { flex-direction: column; gap: 0.7rem; align-items: flex-start; }
+      .kpi-value { font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <h1>🧪 バックテスト結果ダッシュボード</h1>
+      <div class="header-right">
+        <button class="btn-link" onclick="window.open('report.html', '_blank')">← レベル1 スクリーニング結果</button>
+        <span class="badge">LEVEL 1 検証</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- 条件バー -->
+    <div class="condition-bar">
+      <span class="label">検証期間</span>
+      <span class="val">2025-01-07 〜 2025-01-10</span>
+      <span class="cond-sep">|</span>
+      <span class="label">スクリーニング条件</span>
+      <span class="val">SMA5 &gt; SMA20 &gt; SMA60 &nbsp;&amp;&amp;&nbsp; 出来高 ≥ 500,000株</span>
+      <span class="cond-sep">|</span>
+      <span class="label">達成閾値</span>
+      <span class="val">+2%</span>
+      <span class="cond-sep">|</span>
+      <span class="label">生成日時</span>
+      <span class="val">2026-02-22 01:36:16</span>
+    </div>
+
+    <!-- KPIカード -->
+    <div class="kpi-grid">
+      
+        <div class="kpi-card">
+          <div class="kpi-label">検証日数</div>
+          <div class="kpi-value ">4日</div>
+          
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">総シグナル数</div>
+          <div class="kpi-value ">63件</div>
+          <div class='kpi-sub'>20銘柄</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">翌日平均騰落率</div>
+          <div class="kpi-value ">-1.111%</div>
+          <div class='kpi-sub'>全シグナル平均</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">翌日勝率</div>
+          <div class="kpi-value ">15.9%</div>
+          <div class='kpi-sub'>プラスで終わった割合</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">翌日+2%達成率</div>
+          <div class="kpi-value yellow">3.2%</div>
+          <div class='kpi-sub'>狙い通りの爆発率</div>
+        </div>
+    </div>
+
+    <!-- 日付別集計 -->
+    <div class="section-title">📅 日付別パーセンテージ一覧</div>
+    
+    <div class="mini-chart-wrap">
+      <div style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:0.7rem;font-weight:600;">
+        📊 日付別 翌日平均騰落率（棒グラフ）
+      </div>
+      <div class="mini-chart"><div class='mini-bar-col'>  <span class='mini-bar-val' style='color:#ef4444; margin-bottom:54px'>-0.4%</span>  <div class='mini-bar' style='height:10px;background:#ef4444;' title='2025-01-07 翌日平均: -0.4%'></div>  <span class='mini-bar-label'>01-07</span></div><div class='mini-bar-col'>  <span class='mini-bar-val' style='color:#ef4444; margin-bottom:18px'>-1.7%</span>  <div class='mini-bar' style='height:46px;background:#ef4444;' title='2025-01-08 翌日平均: -1.7%'></div>  <span class='mini-bar-label'>01-08</span></div><div class='mini-bar-col'>  <span class='mini-bar-val' style='color:#ef4444; margin-bottom:46px'>-0.7%</span>  <div class='mini-bar' style='height:18px;background:#ef4444;' title='2025-01-09 翌日平均: -0.7%'></div>  <span class='mini-bar-label'>01-09</span></div><div class='mini-bar-col'>  <span class='mini-bar-val' style='color:#ef4444; margin-bottom:7px'>-2.1%</span>  <div class='mini-bar' style='height:57px;background:#ef4444;' title='2025-01-10 翌日平均: -2.1%'></div>  <span class='mini-bar-label'>01-10</span></div></div>
+    </div>
+    <div class="table-wrap" style="margin-bottom:2rem">
+      <table class="date-summary-table">
+        <thead>
+          <tr>
+            <th>日付</th>
+            <th>候補数</th>
+            <th>翌日 勝率</th>
+            <th>翌日 平均</th>
+            <th>2日後 勝率</th>
+            <th>2日後 平均</th>
+            <th>+2% 達成率</th>
+          </tr>
+        </thead>
+        <tbody><tr><td>2025-01-07</td><td>19件</td><td><span class="hm-cell" style="background:rgba(16,185,129,0.22);color:rgb(16,185,129)">+36.8%</span></td><td><span class="hm-cell" style="background:rgba(16,185,129,0.22);color:rgb(16,185,129)">-0.4%</span></td><td><span class="hm-cell" style="background:rgba(242,103,58,0.22);color:rgb(242,103,58)">+5.3%</span></td><td><span class="hm-cell" style="background:rgba(245,139,49,0.22);color:rgb(245,139,49)">-1.8%</span></td><td><span class="hm-cell" style="background:rgba(90,186,99,0.22);color:rgb(90,186,99)">+5.3%</span></td></tr><tr><td>2025-01-08</td><td>17件</td><td><span class="hm-cell" style="background:rgba(239,68,68,0.22);color:rgb(239,68,68)">0.0%</span></td><td><span class="hm-cell" style="background:rgba(246,149,46,0.22);color:rgb(246,149,46)">-1.7%</span></td><td><span class="hm-cell" style="background:rgba(246,146,47,0.22);color:rgb(246,146,47)">+11.8%</span></td><td><span class="hm-cell" style="background:rgba(239,68,68,0.22);color:rgb(239,68,68)">-2.3%</span></td><td><span class="hm-cell" style="background:rgba(239,68,68,0.22);color:rgb(239,68,68)">0.0%</span></td></tr><tr><td>2025-01-09</td><td>16件</td><td><span class="hm-cell" style="background:rgba(247,151,46,0.22);color:rgb(247,151,46)">+12.5%</span></td><td><span class="hm-cell" style="background:rgba(91,186,99,0.22);color:rgb(91,186,99)">-0.7%</span></td><td><span class="hm-cell" style="background:rgba(243,109,57,0.22);color:rgb(243,109,57)">+6.2%</span></td><td><span class="hm-cell" style="background:rgba(239,74,66,0.22);color:rgb(239,74,66)">-2.3%</span></td><td><span class="hm-cell" style="background:rgba(16,185,129,0.22);color:rgb(16,185,129)">+6.2%</span></td></tr><tr><td>2025-01-10</td><td>11件</td><td><span class="hm-cell" style="background:rgba(244,128,52,0.22);color:rgb(244,128,52)">+9.1%</span></td><td><span class="hm-cell" style="background:rgba(241,97,60,0.22);color:rgb(241,97,60)">-2.1%</span></td><td><span class="hm-cell" style="background:rgba(244,128,52,0.22);color:rgb(244,128,52)">+9.1%</span></td><td><span class="hm-cell" style="background:rgba(239,76,65,0.22);color:rgb(239,76,65)">-2.3%</span></td><td><span class="hm-cell" style="background:rgba(239,68,68,0.22);color:rgb(239,68,68)">0.0%</span></td></tr></tbody>
+      </table>
+    </div>
+
+    <!-- 日数別リターン統計 -->
+    <div class="section-title">📈 日数別リターン統計</div>
+    <div class="ret-stats-grid">
+      
+        <div class="ret-stat-card">
+          <div class="ret-stat-title">📅 翌日（1日後）</div>
+          <div class="ret-stat-row"><span class="k">平均リターン</span><span class="v neg">-1.111%</span></div>
+          <div class="ret-stat-row"><span class="k">中央値</span><span class="v">-0.95</span></div>
+          <div class="ret-stat-row"><span class="k">勝率</span><span class="v">15.9%</span></div>
+          <div class="ret-stat-row"><span class="k">最大</span><span class="v pos">+5.125%</span></div>
+          <div class="ret-stat-row"><span class="k">最小</span><span class="v neg">-9.21%</span></div>
+          <div class="ret-stat-row"><span class="k">+2%達成率</span><span class="v">3.2%</span></div>
+        </div>
+
+        <div class="ret-stat-card">
+          <div class="ret-stat-title">📅 2日後</div>
+          <div class="ret-stat-row"><span class="k">平均リターン</span><span class="v neg">-2.144%</span></div>
+          <div class="ret-stat-row"><span class="k">中央値</span><span class="v">-1.726</span></div>
+          <div class="ret-stat-row"><span class="k">勝率</span><span class="v">7.9%</span></div>
+          <div class="ret-stat-row"><span class="k">最大</span><span class="v pos">+3.027%</span></div>
+          <div class="ret-stat-row"><span class="k">最小</span><span class="v neg">-12.428%</span></div>
+          <div class="ret-stat-row"><span class="k">+2%達成率</span><span class="v">1.6%</span></div>
+        </div>
+
+        <div class="ret-stat-card">
+          <div class="ret-stat-title">📅 3日後</div>
+          <div class="ret-stat-row"><span class="k">平均リターン</span><span class="v neg">-2.835%</span></div>
+          <div class="ret-stat-row"><span class="k">中央値</span><span class="v">-2.922</span></div>
+          <div class="ret-stat-row"><span class="k">勝率</span><span class="v">9.5%</span></div>
+          <div class="ret-stat-row"><span class="k">最大</span><span class="v pos">+6.56%</span></div>
+          <div class="ret-stat-row"><span class="k">最小</span><span class="v neg">-11.416%</span></div>
+          <div class="ret-stat-row"><span class="k">+2%達成率</span><span class="v">1.6%</span></div>
+        </div>
+
+        <div class="ret-stat-card">
+          <div class="ret-stat-title">📅 5日後</div>
+          <div class="ret-stat-row"><span class="k">平均リターン</span><span class="v neg">-3.297%</span></div>
+          <div class="ret-stat-row"><span class="k">中央値</span><span class="v">-2.813</span></div>
+          <div class="ret-stat-row"><span class="k">勝率</span><span class="v">11.1%</span></div>
+          <div class="ret-stat-row"><span class="k">最大</span><span class="v pos">+4.444%</span></div>
+          <div class="ret-stat-row"><span class="k">最小</span><span class="v neg">-9.73%</span></div>
+          <div class="ret-stat-row"><span class="k">+2%達成率</span><span class="v">3.2%</span></div>
+        </div>
+    </div>
+
+    <!-- 上位銘柄 -->
+    <div class="section-title">🏆 上位銘柄ランキング（翌日+2%達成回数）</div>
+    <div class="table-wrap" style="margin-bottom:2rem">
+      
+    <table class="top-ticker-table">
+      <thead>
+        <tr>
+          <th style="width:40px">#</th>
+          <th>コード</th>
+          <th>銘柄名</th>
+          <th>+2%達成回数</th>
+          <th style="text-align:right">シグナル総数</th>
+          <th style="text-align:right">平均翌日リターン</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td class="rank top3">1</td>
+          <td class="code-cell">6857</td>
+          <td>アドバンテスト</td>
+          <td>
+            <div class="hit-bar-wrap">
+              <span style="font-weight:700;color:var(--green)">2</span>
+              <div class="hit-bar" style="width:100px"></div>
+            </div>
+          </td>
+          <td style="text-align:right">2</td>
+          <td style="text-align:right" class="ret-pos">+4.277%</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <!-- 詳細テーブル -->
+    <div class="table-wrap">
+      <div class="table-toolbar">
+        <h2>📋 全シグナル詳細（63件）</h2>
+        <div class="toolbar-right">
+          <select class="filter-select" id="hitFilter">
+            <option value="all">すべて表示</option>
+            <option value="hit">達成のみ</option>
+            <option value="miss">未達成のみ</option>
+            <option value="nodata">データなし</option>
+          </select>
+          <input type="text" class="search-box" id="searchBox" placeholder="🔍 銘柄・日付で検索...">
+        </div>
+      </div>
+      
+    <table class="detail-table" id="detailTable">
+      <thead>
+        <tr>
+          <th data-sort="date" data-type="string" style="text-align:left">日付 <span class="si">⇅</span></th>
+          <th data-sort="ticker" data-type="number" style="text-align:left">コード <span class="si">⇅</span></th>
+          <th data-sort="name" data-type="string" style="text-align:left">銘柄名 <span class="si">⇅</span></th>
+          <th data-sort="close" data-type="number">終値 <span class="si">⇅</span></th>
+          <th data-sort="volume" data-type="number">出来高 <span class="si">⇅</span></th>
+          <th data-sort="vol_ratio" data-type="number">出来高比 <span class="si">⇅</span></th>
+          <th data-sort="ret1" data-type="number">翌日 <span class="si">⇅</span></th>
+          <th data-sort="ret2" data-type="number">2日後 <span class="si">⇅</span></th>
+          <th data-sort="ret3" data-type="number">3日後 <span class="si">⇅</span></th>
+          <th data-sort="ret5" data-type="number">5日後 <span class="si">⇅</span></th>
+          <th data-sort="hit1" data-type="number">+2%達成 <span class="si">⇅</span></th>
+        </tr>
+      </thead>
+      <tbody id="detailBody">
+        
+        <tr>
+          <td>2025-01-07</td>
+          <td class="code-cell">7203</td>
+          <td>トヨタ自動車</td>
+          <td>2,952.6</td>
+          <td>44,700,900</td>
+          <td>1.52x</td>
+          <td><span class="ret-pos">+0.69%</span></td>
+          <td><span class="ret-neg">-1.54%</span></td>
+          <td><span class="ret-neg">-3.93%</span></td>
+          <td><span class="ret-neg">-4.95%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-07</td>
+          <td class="code-cell">9984</td>
+          <td>ソフトバンクグループ</td>
+          <td>2,327.1</td>
+          <td>46,282,000</td>
+          <td>1.43x</td>
+          <td><span class="ret-pos">+0.28%</span></td>
+          <td><span class="ret-neg">-0.17%</span></td>
+          <td><span class="ret-neg">-1.01%</span></td>
+          <td><span class="ret-neg">-3.68%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-07</td>
+          <td class="code-cell">8035</td>
+          <td>東京エレクトロン</td>
+          <td>26,436.9</td>
+          <td>10,258,300</td>
+          <td>2.92x</td>
+          <td><span class="ret-pos">+1.62%</span></td>
+          <td><span class="ret-neg">-0.24%</span></td>
+          <td><span class="ret-neg">-0.28%</span></td>
+          <td><span class="ret-neg">-5.33%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-07</td>
+          <td class="code-cell">6501</td>
+          <td>日立製作所</td>
+          <td>3,990.8</td>
+          <td>14,233,200</td>
+          <td>1.49x</td>
+          <td><span class="ret-neg">-1.81%</span></td>
+          <td><span class="ret-neg">-3.19%</span></td>
+          <td><span class="ret-neg">-5.65%</span></td>
+          <td><span class="ret-neg">-7.75%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-07</td>
+          <td class="code-cell">6758</td>
+          <td>ソニーグループ</td>
+          <td>3,322.5</td>
+          <td>11,474,900</td>
+          <td>0.84x</td>
+          <td><span class="ret-neg">-1.53%</span></td>
+          <td><span class="ret-neg">-2.87%</span></td>
+          <td><span class="ret-neg">-3.17%</span></td>
+          <td><span class="ret-neg">-4.04%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-07</td>
+          <td class="code-cell">7974</td>
+          <td>任天堂</td>
+          <td>9,058.1</td>
+          <td>3,532,800</td>
+          <td>0.85x</td>
+          <td><span class="ret-neg">-2.78%</span></td>
+          <td><span class="ret-neg">-0.43%</span></td>
+          <td><span class="ret-pos">+0.98%</span></td>
+          <td><span class="ret-pos">+4.44%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-07</td>
+          <td class="code-cell">8306</td>
+          <td>三菱UFJ</td>
+          <td>1,856.6</td>
+          <td>84,675,200</td>
+          <td>1.84x</td>
+          <td><span class="ret-pos">+0.03%</span></td>
+          <td><span class="ret-neg">-0.05%</span></td>
+          <td><span class="ret-neg">-0.78%</span></td>
+          <td><span class="ret-neg">-1.35%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-07</td>
+          <td class="code-cell">9432</td>
+          <td>NTT</td>
+          <td>152.2</td>
+          <td>135,965,800</td>
+          <td>1.05x</td>
+          <td><span class="ret-neg">-0.70%</span></td>
+          <td><span class="ret-neg">-1.27%</span></td>
+          <td><span class="ret-neg">-2.41%</span></td>
+          <td><span class="ret-neg">-2.48%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-07</td>
+          <td class="code-cell">8001</td>
+          <td>伊藤忠商事</td>
+          <td>1,514.8</td>
+          <td>10,879,000</td>
+          <td>0.93x</td>
+          <td><span class="ret-neg">-0.21%</span></td>
+          <td><span class="ret-neg">-3.90%</span></td>
+          <td><span class="ret-neg">-5.37%</span></td>
+          <td><span class="ret-neg">-7.35%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-07</td>
+          <td class="code-cell">6857</td>
+          <td>アドバンテスト</td>
+          <td>9,694.5</td>
+          <td>22,566,000</td>
+          <td>1.43x</td>
+          <td><span class="ret-pos">+3.43%</span></td>
+          <td><span class="ret-pos">+1.36%</span></td>
+          <td><span class="ret-pos">+6.56%</span></td>
+          <td><span class="ret-neg">-6.68%</span></td>
+          <td><span class="hit-badge hit-1">✓ 達成</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-07</td>
+          <td class="code-cell">7751</td>
+          <td>キヤノン</td>
+          <td>4,868.3</td>
+          <td>2,747,500</td>
+          <td>1.13x</td>
+          <td><span class="ret-pos">+0.12%</span></td>
+          <td><span class="ret-neg">-0.14%</span></td>
+          <td><span class="ret-neg">-1.53%</span></td>
+          <td><span class="ret-neg">-2.50%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-07</td>
+          <td class="code-cell">9433</td>
+          <td>KDDI</td>
+          <td>2,377.6</td>
+          <td>8,784,800</td>
+          <td>1.34x</td>
+          <td><span class="ret-neg">-0.59%</span></td>
+          <td><span class="ret-neg">-0.83%</span></td>
+          <td><span class="ret-neg">-3.38%</span></td>
+          <td><span class="ret-neg">-1.34%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-07</td>
+          <td class="code-cell">8031</td>
+          <td>三井物産</td>
+          <td>3,191.9</td>
+          <td>5,225,700</td>
+          <td>0.95x</td>
+          <td><span class="ret-neg">-2.25%</span></td>
+          <td><span class="ret-neg">-6.20%</span></td>
+          <td><span class="ret-neg">-7.08%</span></td>
+          <td><span class="ret-neg">-7.56%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-07</td>
+          <td class="code-cell">8316</td>
+          <td>三井住友FG</td>
+          <td>3,738.1</td>
+          <td>19,417,400</td>
+          <td>1.62x</td>
+          <td><span class="ret-pos">+0.52%</span></td>
+          <td><span class="ret-neg">-0.70%</span></td>
+          <td><span class="ret-neg">-2.92%</span></td>
+          <td><span class="ret-neg">-1.71%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-07</td>
+          <td class="code-cell">6752</td>
+          <td>パナソニックHD</td>
+          <td>1,562.5</td>
+          <td>7,458,600</td>
+          <td>0.90x</td>
+          <td><span class="ret-neg">-0.25%</span></td>
+          <td><span class="ret-neg">-1.68%</span></td>
+          <td><span class="ret-neg">-2.62%</span></td>
+          <td><span class="ret-neg">-3.05%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-07</td>
+          <td class="code-cell">4507</td>
+          <td>塩野義製薬</td>
+          <td>2,176.0</td>
+          <td>1,747,300</td>
+          <td>0.82x</td>
+          <td><span class="ret-neg">-0.94%</span></td>
+          <td><span class="ret-neg">-1.10%</span></td>
+          <td><span class="ret-pos">+0.81%</span></td>
+          <td><span class="ret-neg">-0.67%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-07</td>
+          <td class="code-cell">7269</td>
+          <td>スズキ</td>
+          <td>1,847.0</td>
+          <td>5,901,100</td>
+          <td>0.91x</td>
+          <td><span class="ret-neg">-1.17%</span></td>
+          <td><span class="ret-neg">-4.14%</span></td>
+          <td><span class="ret-neg">-6.20%</span></td>
+          <td><span class="ret-neg">-6.39%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-07</td>
+          <td class="code-cell">6503</td>
+          <td>三菱電機</td>
+          <td>2,630.8</td>
+          <td>4,419,400</td>
+          <td>1.12x</td>
+          <td><span class="ret-neg">-0.64%</span></td>
+          <td><span class="ret-neg">-3.31%</span></td>
+          <td><span class="ret-neg">-3.92%</span></td>
+          <td><span class="ret-neg">-4.78%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-07</td>
+          <td class="code-cell">7832</td>
+          <td>バンダイナムコHD</td>
+          <td>3,599.2</td>
+          <td>2,194,800</td>
+          <td>0.76x</td>
+          <td><span class="ret-neg">-0.90%</span></td>
+          <td><span class="ret-neg">-3.23%</span></td>
+          <td><span class="ret-neg">-3.69%</span></td>
+          <td><span class="ret-neg">-4.26%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-08</td>
+          <td class="code-cell">7203</td>
+          <td>トヨタ自動車</td>
+          <td>2,972.9</td>
+          <td>24,570,000</td>
+          <td>0.83x</td>
+          <td><span class="ret-neg">-2.21%</span></td>
+          <td><span class="ret-neg">-4.59%</span></td>
+          <td><span class="ret-neg">-5.39%</span></td>
+          <td><span class="ret-neg">-7.68%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-08</td>
+          <td class="code-cell">9984</td>
+          <td>ソフトバンクグループ</td>
+          <td>2,333.6</td>
+          <td>24,600,400</td>
+          <td>0.77x</td>
+          <td><span class="ret-neg">-0.45%</span></td>
+          <td><span class="ret-neg">-1.28%</span></td>
+          <td><span class="ret-neg">-3.88%</span></td>
+          <td><span class="ret-neg">-1.80%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-08</td>
+          <td class="code-cell">8035</td>
+          <td>東京エレクトロン</td>
+          <td>26,866.1</td>
+          <td>6,154,100</td>
+          <td>1.69x</td>
+          <td><span class="ret-neg">-1.83%</span></td>
+          <td><span class="ret-neg">-1.87%</span></td>
+          <td><span class="ret-neg">-5.52%</span></td>
+          <td><span class="ret-neg">-3.23%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-08</td>
+          <td class="code-cell">6501</td>
+          <td>日立製作所</td>
+          <td>3,918.6</td>
+          <td>10,784,300</td>
+          <td>1.14x</td>
+          <td><span class="ret-neg">-1.41%</span></td>
+          <td><span class="ret-neg">-3.91%</span></td>
+          <td><span class="ret-neg">-5.70%</span></td>
+          <td><span class="ret-neg">-6.99%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-08</td>
+          <td class="code-cell">6758</td>
+          <td>ソニーグループ</td>
+          <td>3,271.8</td>
+          <td>11,598,000</td>
+          <td>0.85x</td>
+          <td><span class="ret-neg">-1.37%</span></td>
+          <td><span class="ret-neg">-1.67%</span></td>
+          <td><span class="ret-neg">-4.10%</span></td>
+          <td><span class="ret-neg">-2.80%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-08</td>
+          <td class="code-cell">8306</td>
+          <td>三菱UFJ</td>
+          <td>1,857.1</td>
+          <td>65,845,300</td>
+          <td>1.40x</td>
+          <td><span class="ret-neg">-0.08%</span></td>
+          <td><span class="ret-neg">-0.81%</span></td>
+          <td><span class="ret-neg">-3.10%</span></td>
+          <td><span class="ret-neg">-1.51%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-08</td>
+          <td class="code-cell">9432</td>
+          <td>NTT</td>
+          <td>151.1</td>
+          <td>132,046,800</td>
+          <td>1.03x</td>
+          <td><span class="ret-neg">-0.57%</span></td>
+          <td><span class="ret-neg">-1.73%</span></td>
+          <td><span class="ret-neg">-1.41%</span></td>
+          <td><span class="ret-neg">-2.81%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-08</td>
+          <td class="code-cell">8001</td>
+          <td>伊藤忠商事</td>
+          <td>1,511.6</td>
+          <td>13,142,500</td>
+          <td>1.12x</td>
+          <td><span class="ret-neg">-3.70%</span></td>
+          <td><span class="ret-neg">-5.17%</span></td>
+          <td><span class="ret-neg">-5.16%</span></td>
+          <td><span class="ret-neg">-7.98%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-08</td>
+          <td class="code-cell">6857</td>
+          <td>アドバンテスト</td>
+          <td>10,026.9</td>
+          <td>17,188,400</td>
+          <td>1.07x</td>
+          <td><span class="ret-neg">-2.00%</span></td>
+          <td><span class="ret-pos">+3.03%</span></td>
+          <td><span class="ret-neg">-6.46%</span></td>
+          <td><span class="ret-neg">-8.73%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-08</td>
+          <td class="code-cell">7751</td>
+          <td>キヤノン</td>
+          <td>4,874.1</td>
+          <td>3,133,300</td>
+          <td>1.27x</td>
+          <td><span class="ret-neg">-0.26%</span></td>
+          <td><span class="ret-neg">-1.64%</span></td>
+          <td><span class="ret-neg">-2.14%</span></td>
+          <td><span class="ret-neg">-2.71%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-08</td>
+          <td class="code-cell">8031</td>
+          <td>三井物産</td>
+          <td>3,120.2</td>
+          <td>6,791,300</td>
+          <td>1.24x</td>
+          <td><span class="ret-neg">-4.04%</span></td>
+          <td><span class="ret-neg">-4.94%</span></td>
+          <td><span class="ret-neg">-5.50%</span></td>
+          <td><span class="ret-neg">-6.00%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-08</td>
+          <td class="code-cell">8316</td>
+          <td>三井住友FG</td>
+          <td>3,757.4</td>
+          <td>13,827,300</td>
+          <td>1.14x</td>
+          <td><span class="ret-neg">-1.21%</span></td>
+          <td><span class="ret-neg">-3.42%</span></td>
+          <td><span class="ret-neg">-4.50%</span></td>
+          <td><span class="ret-neg">-2.01%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-08</td>
+          <td class="code-cell">6752</td>
+          <td>パナソニックHD</td>
+          <td>1,558.7</td>
+          <td>6,264,900</td>
+          <td>0.76x</td>
+          <td><span class="ret-neg">-1.44%</span></td>
+          <td><span class="ret-neg">-2.37%</span></td>
+          <td><span class="ret-neg">-3.40%</span></td>
+          <td><span class="ret-neg">-4.81%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-08</td>
+          <td class="code-cell">4507</td>
+          <td>塩野義製薬</td>
+          <td>2,155.5</td>
+          <td>2,557,700</td>
+          <td>1.18x</td>
+          <td><span class="ret-neg">-0.16%</span></td>
+          <td><span class="ret-pos">+1.76%</span></td>
+          <td><span class="ret-pos">+1.54%</span></td>
+          <td><span class="ret-neg">-0.52%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-08</td>
+          <td class="code-cell">7269</td>
+          <td>スズキ</td>
+          <td>1,825.4</td>
+          <td>4,368,500</td>
+          <td>0.67x</td>
+          <td><span class="ret-neg">-3.00%</span></td>
+          <td><span class="ret-neg">-5.10%</span></td>
+          <td><span class="ret-neg">-5.55%</span></td>
+          <td><span class="ret-neg">-6.65%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-08</td>
+          <td class="code-cell">6503</td>
+          <td>三菱電機</td>
+          <td>2,614.1</td>
+          <td>3,716,300</td>
+          <td>0.96x</td>
+          <td><span class="ret-neg">-2.69%</span></td>
+          <td><span class="ret-neg">-3.31%</span></td>
+          <td><span class="ret-neg">-3.72%</span></td>
+          <td><span class="ret-neg">-4.08%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-08</td>
+          <td class="code-cell">7832</td>
+          <td>バンダイナムコHD</td>
+          <td>3,566.8</td>
+          <td>1,821,200</td>
+          <td>0.64x</td>
+          <td><span class="ret-neg">-2.35%</span></td>
+          <td><span class="ret-neg">-2.81%</span></td>
+          <td><span class="ret-neg">-3.50%</span></td>
+          <td><span class="ret-neg">-2.48%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-09</td>
+          <td class="code-cell">7203</td>
+          <td>トヨタ自動車</td>
+          <td>2,907.1</td>
+          <td>26,998,400</td>
+          <td>0.89x</td>
+          <td><span class="ret-neg">-2.43%</span></td>
+          <td><span class="ret-neg">-3.25%</span></td>
+          <td><span class="ret-neg">-3.46%</span></td>
+          <td><span class="ret-neg">-7.22%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-09</td>
+          <td class="code-cell">9984</td>
+          <td>ソフトバンクグループ</td>
+          <td>2,323.1</td>
+          <td>22,023,200</td>
+          <td>0.69x</td>
+          <td><span class="ret-neg">-0.84%</span></td>
+          <td><span class="ret-neg">-3.45%</span></td>
+          <td><span class="ret-neg">-3.52%</span></td>
+          <td><span class="ret-neg">-2.67%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-09</td>
+          <td class="code-cell">8035</td>
+          <td>東京エレクトロン</td>
+          <td>26,373.5</td>
+          <td>4,369,400</td>
+          <td>1.20x</td>
+          <td><span class="ret-neg">-0.04%</span></td>
+          <td><span class="ret-neg">-3.75%</span></td>
+          <td><span class="ret-neg">-5.10%</span></td>
+          <td><span class="ret-neg">-1.41%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-09</td>
+          <td class="code-cell">6501</td>
+          <td>日立製作所</td>
+          <td>3,863.3</td>
+          <td>8,217,400</td>
+          <td>0.88x</td>
+          <td><span class="ret-neg">-2.53%</span></td>
+          <td><span class="ret-neg">-4.35%</span></td>
+          <td><span class="ret-neg">-4.71%</span></td>
+          <td><span class="ret-neg">-5.42%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-09</td>
+          <td class="code-cell">8306</td>
+          <td>三菱UFJ</td>
+          <td>1,855.6</td>
+          <td>49,890,200</td>
+          <td>1.04x</td>
+          <td><span class="ret-neg">-0.73%</span></td>
+          <td><span class="ret-neg">-3.02%</span></td>
+          <td><span class="ret-neg">-1.30%</span></td>
+          <td><span class="ret-neg">-2.61%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-09</td>
+          <td class="code-cell">9432</td>
+          <td>NTT</td>
+          <td>150.3</td>
+          <td>120,365,000</td>
+          <td>0.94x</td>
+          <td><span class="ret-neg">-1.16%</span></td>
+          <td><span class="ret-neg">-0.84%</span></td>
+          <td><span class="ret-neg">-1.22%</span></td>
+          <td><span class="ret-neg">-3.02%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-09</td>
+          <td class="code-cell">8001</td>
+          <td>伊藤忠商事</td>
+          <td>1,455.7</td>
+          <td>17,436,000</td>
+          <td>1.46x</td>
+          <td><span class="ret-neg">-1.53%</span></td>
+          <td><span class="ret-neg">-1.51%</span></td>
+          <td><span class="ret-neg">-3.59%</span></td>
+          <td><span class="ret-neg">-4.86%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-09</td>
+          <td class="code-cell">6857</td>
+          <td>アドバンテスト</td>
+          <td>9,826.8</td>
+          <td>12,828,500</td>
+          <td>0.79x</td>
+          <td><span class="ret-pos">+5.12%</span></td>
+          <td><span class="ret-neg">-4.56%</span></td>
+          <td><span class="ret-neg">-7.94%</span></td>
+          <td><span class="ret-neg">-7.25%</span></td>
+          <td><span class="hit-badge hit-1">✓ 達成</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-09</td>
+          <td class="code-cell">7751</td>
+          <td>キヤノン</td>
+          <td>4,861.5</td>
+          <td>2,124,600</td>
+          <td>0.85x</td>
+          <td><span class="ret-neg">-1.39%</span></td>
+          <td><span class="ret-neg">-1.89%</span></td>
+          <td><span class="ret-neg">-2.36%</span></td>
+          <td><span class="ret-neg">-3.13%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-09</td>
+          <td class="code-cell">8031</td>
+          <td>三井物産</td>
+          <td>2,994.2</td>
+          <td>8,897,500</td>
+          <td>1.58x</td>
+          <td><span class="ret-neg">-0.94%</span></td>
+          <td><span class="ret-neg">-1.52%</span></td>
+          <td><span class="ret-neg">-1.46%</span></td>
+          <td><span class="ret-neg">-2.82%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-09</td>
+          <td class="code-cell">8316</td>
+          <td>三井住友FG</td>
+          <td>3,712.0</td>
+          <td>12,180,500</td>
+          <td>1.00x</td>
+          <td><span class="ret-neg">-2.24%</span></td>
+          <td><span class="ret-neg">-3.33%</span></td>
+          <td><span class="ret-neg">-1.02%</span></td>
+          <td><span class="ret-neg">-1.56%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-09</td>
+          <td class="code-cell">6752</td>
+          <td>パナソニックHD</td>
+          <td>1,536.3</td>
+          <td>6,991,900</td>
+          <td>0.85x</td>
+          <td><span class="ret-neg">-0.95%</span></td>
+          <td><span class="ret-neg">-2.00%</span></td>
+          <td><span class="ret-neg">-1.39%</span></td>
+          <td><span class="ret-neg">-3.17%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-09</td>
+          <td class="code-cell">4507</td>
+          <td>塩野義製薬</td>
+          <td>2,152.1</td>
+          <td>1,908,700</td>
+          <td>0.90x</td>
+          <td><span class="ret-pos">+1.92%</span></td>
+          <td><span class="ret-pos">+1.70%</span></td>
+          <td><span class="ret-pos">+0.43%</span></td>
+          <td><span class="ret-pos">+0.72%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-09</td>
+          <td class="code-cell">7269</td>
+          <td>スズキ</td>
+          <td>1,770.6</td>
+          <td>5,188,300</td>
+          <td>0.79x</td>
+          <td><span class="ret-neg">-2.16%</span></td>
+          <td><span class="ret-neg">-2.63%</span></td>
+          <td><span class="ret-neg">-2.35%</span></td>
+          <td><span class="ret-neg">-3.57%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-09</td>
+          <td class="code-cell">6503</td>
+          <td>三菱電機</td>
+          <td>2,543.8</td>
+          <td>3,456,400</td>
+          <td>0.89x</td>
+          <td><span class="ret-neg">-0.64%</span></td>
+          <td><span class="ret-neg">-1.06%</span></td>
+          <td><span class="ret-neg">-1.53%</span></td>
+          <td><span class="ret-neg">-1.66%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-09</td>
+          <td class="code-cell">7832</td>
+          <td>バンダイナムコHD</td>
+          <td>3,483.1</td>
+          <td>2,501,000</td>
+          <td>0.89x</td>
+          <td><span class="ret-neg">-0.48%</span></td>
+          <td><span class="ret-neg">-1.19%</span></td>
+          <td><span class="ret-neg">-1.07%</span></td>
+          <td><span class="ret-neg">-1.41%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-10</td>
+          <td class="code-cell">7203</td>
+          <td>トヨタ自動車</td>
+          <td>2,836.5</td>
+          <td>26,369,200</td>
+          <td>0.85x</td>
+          <td><span class="ret-neg">-0.84%</span></td>
+          <td><span class="ret-neg">-1.06%</span></td>
+          <td><span class="ret-neg">-3.24%</span></td>
+          <td><span class="ret-neg">-2.12%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-10</td>
+          <td class="code-cell">9984</td>
+          <td>ソフトバンクグループ</td>
+          <td>2,303.7</td>
+          <td>26,358,000</td>
+          <td>0.83x</td>
+          <td><span class="ret-neg">-2.64%</span></td>
+          <td><span class="ret-neg">-2.70%</span></td>
+          <td><span class="ret-neg">-0.53%</span></td>
+          <td><span class="ret-pos">+0.22%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-10</td>
+          <td class="code-cell">8035</td>
+          <td>東京エレクトロン</td>
+          <td>26,363.7</td>
+          <td>4,977,300</td>
+          <td>1.33x</td>
+          <td><span class="ret-neg">-3.72%</span></td>
+          <td><span class="ret-neg">-5.07%</span></td>
+          <td><span class="ret-neg">-1.39%</span></td>
+          <td><span class="ret-neg">-1.39%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-10</td>
+          <td class="code-cell">8306</td>
+          <td>三菱UFJ</td>
+          <td>1,842.1</td>
+          <td>45,911,300</td>
+          <td>0.96x</td>
+          <td><span class="ret-neg">-2.31%</span></td>
+          <td><span class="ret-neg">-0.58%</span></td>
+          <td><span class="ret-neg">-0.71%</span></td>
+          <td><span class="ret-pos">+0.63%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-10</td>
+          <td class="code-cell">9432</td>
+          <td>NTT</td>
+          <td>148.5</td>
+          <td>133,808,200</td>
+          <td>1.05x</td>
+          <td><span class="ret-pos">+0.33%</span></td>
+          <td><span class="ret-neg">-0.07%</span></td>
+          <td><span class="ret-neg">-1.11%</span></td>
+          <td><span class="ret-neg">-1.37%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-10</td>
+          <td class="code-cell">6857</td>
+          <td>アドバンテスト</td>
+          <td>10,330.4</td>
+          <td>16,633,600</td>
+          <td>1.02x</td>
+          <td><span class="ret-neg">-9.21%</span></td>
+          <td><span class="ret-neg">-12.43%</span></td>
+          <td><span class="ret-neg">-11.42%</span></td>
+          <td><span class="ret-neg">-9.73%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-10</td>
+          <td class="code-cell">6723</td>
+          <td>ルネサス</td>
+          <td>1,994.8</td>
+          <td>7,495,200</td>
+          <td>0.88x</td>
+          <td><span class="ret-neg">-1.88%</span></td>
+          <td><span class="ret-neg">-2.23%</span></td>
+          <td><span class="ret-neg">-0.64%</span></td>
+          <td><span class="ret-pos">+0.64%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-10</td>
+          <td class="code-cell">8316</td>
+          <td>三井住友FG</td>
+          <td>3,628.8</td>
+          <td>13,733,100</td>
+          <td>1.12x</td>
+          <td><span class="ret-neg">-1.12%</span></td>
+          <td><span class="ret-pos">+1.25%</span></td>
+          <td><span class="ret-pos">+1.47%</span></td>
+          <td><span class="ret-pos">+2.05%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-10</td>
+          <td class="code-cell">6752</td>
+          <td>パナソニックHD</td>
+          <td>1,521.7</td>
+          <td>4,907,900</td>
+          <td>0.61x</td>
+          <td><span class="ret-neg">-1.05%</span></td>
+          <td><span class="ret-neg">-0.45%</span></td>
+          <td><span class="ret-neg">-2.49%</span></td>
+          <td><span class="ret-neg">-1.18%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-10</td>
+          <td class="code-cell">4507</td>
+          <td>塩野義製薬</td>
+          <td>2,193.5</td>
+          <td>3,175,900</td>
+          <td>1.49x</td>
+          <td><span class="ret-neg">-0.22%</span></td>
+          <td><span class="ret-neg">-1.47%</span></td>
+          <td><span class="ret-neg">-2.24%</span></td>
+          <td><span class="ret-neg">-0.80%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+        <tr>
+          <td>2025-01-10</td>
+          <td class="code-cell">7269</td>
+          <td>スズキ</td>
+          <td>1,732.4</td>
+          <td>6,256,200</td>
+          <td>0.95x</td>
+          <td><span class="ret-neg">-0.48%</span></td>
+          <td><span class="ret-neg">-0.20%</span></td>
+          <td><span class="ret-neg">-1.64%</span></td>
+          <td><span class="ret-pos">+0.65%</span></td>
+          <td><span class="hit-badge hit-0">✗</span></td>
+        </tr>
+      </tbody>
+    </table>
+      <div class="pagination" id="pagination"></div>
+    </div>
+
+  </main>
+
+  <footer class="footer">
+    <p>⚠️ 本ツールは投資助言を目的としたものではありません。投資判断は自己責任でお願いいたします。</p>
+    <p style="margin-top:0.4rem">Generated at 2026-02-22 01:36:16</p>
+  </footer>
+
+  <script>
+    // ============================================================
+    // 全行データをキャッシュ（フィルタ・ページネーション用）
+    // ============================================================
+    const allRows = Array.from(document.querySelectorAll('#detailBody tr'));
+    const PAGE_SIZE = 100;
+    let filteredRows = [...allRows];
+    let currentPage = 1;
+    let sortState = {};
+
+    function applyFiltersAndRender() {
+      const query = document.getElementById('searchBox').value.toLowerCase();
+      const hitFilter = document.getElementById('hitFilter').value;
+
+      filteredRows = allRows.filter(row => {
+        // テキスト検索
+        if (query && !row.textContent.toLowerCase().includes(query)) return false;
+
+        // 達成フラグフィルタ
+        if (hitFilter !== 'all') {
+          const hitCell = row.cells[10];
+          const text = hitCell ? hitCell.textContent.trim() : '';
+          if (hitFilter === 'hit' && !text.includes('達成')) return false;
+          if (hitFilter === 'miss' && !text.includes('✗')) return false;
+          if (hitFilter === 'nodata' && text !== '—') return false;
+        }
+
+        return true;
+      });
+
+      currentPage = 1;
+      renderPage();
+    }
+
+    function renderPage() {
+      const tbody = document.getElementById('detailBody');
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const end = start + PAGE_SIZE;
+
+      allRows.forEach(r => r.style.display = 'none');
+      filteredRows.slice(start, end).forEach(r => r.style.display = '');
+
+      renderPagination();
+    }
+
+    function renderPagination() {
+      const total = filteredRows.length;
+      const totalPages = Math.ceil(total / PAGE_SIZE);
+      const pg = document.getElementById('pagination');
+
+      if (totalPages <= 1) { pg.innerHTML = `<span class="page-info">全 ${total}件</span>`; return; }
+
+      let html = `<span class="page-info">${(currentPage-1)*PAGE_SIZE+1}–${Math.min(currentPage*PAGE_SIZE,total)} / ${total}件</span>`;
+
+      // 前へ
+      html += `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+
+      // ページ番号
+      const pages = getPageNumbers(currentPage, totalPages);
+      pages.forEach(p => {
+        if (p === '...') html += `<span class="page-info">…</span>`;
+        else html += `<button class="page-btn ${p===currentPage?'active':''}" onclick="goPage(${p})">${p}</button>`;
+      });
+
+      // 次へ
+      html += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>›</button>`;
+
+      pg.innerHTML = html;
+    }
+
+    function getPageNumbers(current, total) {
+      if (total <= 7) return Array.from({length: total}, (_, i) => i + 1);
+      const pages = [];
+      if (current <= 4) {
+        for (let i = 1; i <= 5; i++) pages.push(i);
+        pages.push('...'); pages.push(total);
+      } else if (current >= total - 3) {
+        pages.push(1); pages.push('...');
+        for (let i = total - 4; i <= total; i++) pages.push(i);
+      } else {
+        pages.push(1); pages.push('...');
+        for (let i = current - 1; i <= current + 1; i++) pages.push(i);
+        pages.push('...'); pages.push(total);
+      }
+      return pages;
+    }
+
+    function goPage(p) {
+      const total = Math.ceil(filteredRows.length / PAGE_SIZE);
+      if (p < 1 || p > total) return;
+      currentPage = p;
+      renderPage();
+      window.scrollTo({top: document.querySelector('.table-wrap').offsetTop - 80, behavior: 'smooth'});
+    }
+
+    // ============================================================
+    // イベント
+    // ============================================================
+    document.getElementById('searchBox').addEventListener('input', applyFiltersAndRender);
+    document.getElementById('hitFilter').addEventListener('change', applyFiltersAndRender);
+
+    // ソート
+    document.querySelectorAll('.detail-table th[data-sort]').forEach(th => {
+      th.addEventListener('click', function() {
+        const key = this.dataset.sort;
+        const type = this.dataset.type || 'string';
+        sortState[key] = sortState[key] === 'asc' ? 'desc' : 'asc';
+        const dir = sortState[key];
+
+        document.querySelectorAll('.detail-table th').forEach(h => h.classList.remove('sorted'));
+        this.classList.add('sorted');
+        this.querySelector('.si').textContent = dir === 'asc' ? '▲' : '▼';
+
+        const colIndex = Array.from(this.parentElement.children).indexOf(this);
+
+        allRows.sort((a, b) => {
+          const va = a.cells[colIndex]?.textContent.trim() || '';
+          const vb = b.cells[colIndex]?.textContent.trim() || '';
+
+          if (type === 'number') {
+            const na = parseFloat(va.replace(/[^0-9.\-]/g, '')) || -Infinity;
+            const nb = parseFloat(vb.replace(/[^0-9.\-]/g, '')) || -Infinity;
+            return dir === 'asc' ? na - nb : nb - na;
+          }
+          return dir === 'asc' ? va.localeCompare(vb, 'ja') : vb.localeCompare(va, 'ja');
+        });
+
+        const tbody = document.getElementById('detailBody');
+        allRows.forEach(r => tbody.appendChild(r));
+
+        applyFiltersAndRender();
+      });
+    });
+
+    // 初期描画
+    applyFiltersAndRender();
+  </script>
+</body>
+</html>

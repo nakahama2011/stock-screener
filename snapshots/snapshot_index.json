@@ -1,0 +1,43 @@
+{
+  "generated_at": "2026-02-22 01:02:49",
+  "date": "20260222",
+  "output_dir": "/Users/nakahamahirotaka/Desktop/Antigravity/001/snapshots/20260222",
+  "total_tickers": 3,
+  "timeframes": [
+    "4h",
+    "1h",
+    "15m"
+  ],
+  "tickers": [
+    {
+      "code": 2370,
+      "name": "メディネット",
+      "symbol": "TSE:2370",
+      "snapshots": {
+        "4h": "/Users/nakahamahirotaka/Desktop/Antigravity/001/snapshots/20260222/2370_メディネット/4h.png",
+        "1h": "/Users/nakahamahirotaka/Desktop/Antigravity/001/snapshots/20260222/2370_メディネット/1h.png",
+        "15m": "/Users/nakahamahirotaka/Desktop/Antigravity/001/snapshots/20260222/2370_メディネット/15m.png"
+      }
+    },
+    {
+      "code": 3103,
+      "name": "ユニチカ",
+      "symbol": "TSE:3103",
+      "snapshots": {
+        "4h": "/Users/nakahamahirotaka/Desktop/Antigravity/001/snapshots/20260222/3103_ユニチカ/4h.png",
+        "1h": "/Users/nakahamahirotaka/Desktop/Antigravity/001/snapshots/20260222/3103_ユニチカ/1h.png",
+        "15m": "/Users/nakahamahirotaka/Desktop/Antigravity/001/snapshots/20260222/3103_ユニチカ/15m.png"
+      }
+    },
+    {
+      "code": 4005,
+      "name": "住友化学",
+      "symbol": "TSE:4005",
+      "snapshots": {
+        "4h": "/Users/nakahamahirotaka/Desktop/Antigravity/001/snapshots/20260222/4005_住友化学/4h.png",
+        "1h": "/Users/nakahamahirotaka/Desktop/Antigravity/001/snapshots/20260222/4005_住友化学/1h.png",
+        "15m": "/Users/nakahamahirotaka/Desktop/Antigravity/001/snapshots/20260222/4005_住友化学/15m.png"
+      }
+    }
+  ]
+}
