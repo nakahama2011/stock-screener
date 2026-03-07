@@ -246,17 +246,6 @@ with st.sidebar:
         near_high_days = 60
 
     st.markdown("---")
-    # --- 銘柄リスト ---
-    st.markdown("### 🏢 分析対象")
-    use_sample = st.checkbox(
-        "サンプル50銘柄で実行（高速）",
-        value=True,
-        key="use_sample",
-    )
-    if not use_sample:
-        st.warning("⚠️ 全銘柄モードは10〜30分かかります。")
-
-    st.markdown("---")
 
     # --- 実行ボタン ---
     run_button = st.button(
@@ -447,7 +436,7 @@ if run_button:
             as_of_str,
             min_volume,
             hit_threshold,
-            use_sample,
+            False,  # 常に全銘柄モード
             use_pullback,
             near_high_pct,
             near_high_days,
@@ -1169,9 +1158,7 @@ else:
     with col2:
         st.markdown("""
         ### ⚡ クイックスタート
-        **サンプル50銘柄（速い）：** 30〜60秒
-
-        **全銘柄（遅い）：** 10〜30分
+        **実行時間の目安：** 10〜30分（初回はデータ取得に時間がかかります。2回目以降はキャッシュで高速化されます。）
 
         **ヒント：** 同日・同条件の再実行はキャッシュが効き即時表示。
         """)
