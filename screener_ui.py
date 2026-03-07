@@ -493,7 +493,7 @@ if "result_df" in st.session_state:
                     f"+{saved_hit_thr:.0f}%達成のみ",
                     "3日以内プラスのみ",
                     "5日以内プラスのみ",
-                    "🏆 TOP10該当のみ",
+                    "🏆 TOP30該当のみ",
                 ],
                 key="show_filter",
             )
@@ -606,7 +606,7 @@ if "result_df" in st.session_state:
             import json as _json
             with open(_combo_json_path, "r", encoding="utf-8") as _cf:
                 _combo_data = _json.load(_cf)
-            _top_combos = _combo_data.get("combos_5d", [])[:10]  # 上位10件
+            _top_combos = _combo_data.get("combos_5d", [])[:30]  # 上位30件すべて
 
             def _check_condition(row, cond_name):
                 """1つの条件を銘柄データに対して評価する"""
@@ -657,7 +657,7 @@ if "result_df" in st.session_state:
                         rank = i + 1
                         medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else f"#{rank}"
                         matched.append(f"{medal}({combo['win_rate']}%)")
-                        if len(matched) >= 3:  # 最大3つ表示
+                        if len(matched) >= 5:  # 最大5つ表示
                             break
                 return " ".join(matched) if matched else ""
 
@@ -721,7 +721,7 @@ if "result_df" in st.session_state:
             display_df = display_df[display_df["3日以内プラス"] == 1]
         elif show_filter == "5日以内プラスのみ":
             display_df = display_df[display_df["5日以内プラス"] == 1]
-        elif show_filter == "🏆 TOP10該当のみ":
+        elif show_filter == "🏆 TOP30該当のみ":
             if "🏆TOP該当" in display_df.columns:
                 display_df = display_df[display_df["🏆TOP該当"].astype(str).str.len() > 0]
 
