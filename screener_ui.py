@@ -663,6 +663,12 @@ if "result_df" in st.session_state:
                 return " ".join(matched) if matched else ""
 
             display_df["🏆TOP該当"] = display_df.apply(_match_top_combos, axis=1)
+            # 🏆TOP該当列を一番左に配置する
+            cols = display_df.columns.tolist()
+            if "🏆TOP該当" in cols:
+                cols.remove("🏆TOP該当")
+                cols.insert(0, "🏆TOP該当")
+                display_df = display_df[cols]
 
         # フィルタ
         if show_filter == "🏆 高勝率コンボ":
