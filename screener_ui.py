@@ -798,6 +798,13 @@ if "result_df" in st.session_state:
 
         def _fmt_val(col, val):
             """列に応じた表示文字列とスタイル文字列を返す。"""
+            # 🏆TOP該当列はそのまま文字列表示する
+            if col == "🏆TOP該当":
+                s = str(val).strip() if val else ""
+                if s and s != "nan":
+                    return s, "font-weight:bold;color:#fbbf24"
+                return "—", ""
+
             try:
                 v = float(val)
                 is_nan = _math.isnan(v)
