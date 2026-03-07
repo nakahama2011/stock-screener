@@ -417,6 +417,7 @@ def run_single_day_screen(
     hit_col_name = f"+{hit_threshold_val:.0f}%達成(明日)"
     display_cols = [
         "銘柄コード", "銘柄名",
+        "🏆TOP該当",
         "終値",
         "前々日(%)", "前日(%)", "当日(%)",
         "明日(%)", "明後日(%)", "3日後(%)", "4日後(%)", "5日後(%)",
@@ -504,6 +505,7 @@ if "result_df" in st.session_state:
                     f"+{saved_hit_thr:.0f}%達成のみ",
                     "3日以内プラスのみ",
                     "5日以内プラスのみ",
+                    "🏆 TOP10該当のみ",
                 ],
                 key="show_filter",
             )
@@ -607,6 +609,72 @@ if "result_df" in st.session_state:
         display_df = display_df.copy()
         display_df["予測スコア"] = display_df.apply(_calc_score, axis=1)
 
+        # ---- TOP30コンボマッチング ----
+        _combo_json_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "results", "top_combos.json",
+        )
+        if os.path.exists(_combo_json_path):
+            import json as _json
+            with open(_combo_json_path, "r", encoding="utf-8") as _cf:
+                _combo_data = _json.load(_cf)
+            _top_combos = _combo_data.get("combos_5d", [])[:10]  # 上位10件
+
+            def _check_condition(row, cond_name):
+                """1つの条件を銘柄データに対して評価する"""
+                rsi = float(row.get("RSI(14)", 0) or 0)
+                vol_ratio = float(row.get("出来高比(20MA)", 0) or 0)
+                day_pct = float(row.get("当日(%)", 0) or 0)
+                prev_pct = float(row.get("前日(%)", 0) or 0)
+                dow = int(row.get("_day_of_week", -1))
+
+                if cond_name == "RSI 50-65":
+                    return 50 <= rsi <= 65
+                elif cond_name == "RSI 30-50":
+                    return 30 <= rsi < 50
+                elif cond_name == "出来高比≥1.2":
+                    return vol_ratio >= 1.2
+                elif cond_name == "出来高比≥1.5":
+                    return vol_ratio >= 1.5
+                elif cond_name == "当日陽線":
+                    return day_pct > 0
+                elif cond_name == "当日陰線":
+                    return day_pct < 0
+                elif cond_name == "前日陰線":
+                    return prev_pct < 0
+                elif cond_name == "前日陽線":
+                    return prev_pct > 0
+                elif cond_name == "押し目(プルバック)":
+                    return bool(row.get("_is_pullback"))
+                elif cond_name == "20日高値ブレイク":
+                    return bool(row.get("_is_breakout"))
+                elif cond_name == "長大上ヒゲ":
+                    return bool(row.get("_long_upper_wick"))
+                elif cond_name == "高値圏(20日HH 3%以内)":
+                    return bool(row.get("_is_high_zone"))
+                elif cond_name == "前日大陰線":
+                    return bool(row.get("_big_bearish_yesterday"))
+                elif cond_name == "週足SMA20上抜け":
+                    return bool(row.get("_weekly_sma20_ok"))
+                elif cond_name == "火〜木曜":
+                    return dow in [1, 2, 3]
+                return False
+
+            def _match_top_combos(row):
+                """銘柄が該当するTOPコンボを特定する"""
+                matched = []
+                for i, combo in enumerate(_top_combos):
+                    conditions = combo["conditions"].split(" + ")
+                    if all(_check_condition(row, c) for c in conditions):
+                        rank = i + 1
+                        medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else f"#{rank}"
+                        matched.append(f"{medal}({combo['win_rate']}%)")
+                        if len(matched) >= 3:  # 最大3つ表示
+                            break
+                return " ".join(matched) if matched else ""
+
+            display_df["🏆TOP該当"] = display_df.apply(_match_top_combos, axis=1)
+
         # フィルタ
         if show_filter == "🏆 高勝率コンボ":
             # 特徴量分析レポートの上位条件: RSI 30-65 + (押し目 or 当日マイナス)
@@ -659,6 +727,9 @@ if "result_df" in st.session_state:
             display_df = display_df[display_df["3日以内プラス"] == 1]
         elif show_filter == "5日以内プラスのみ":
             display_df = display_df[display_df["5日以内プラス"] == 1]
+        elif show_filter == "🏆 TOP10該当のみ":
+            if "🏆TOP該当" in display_df.columns:
+                display_df = display_df[display_df["🏆TOP該当"].astype(str).str.len() > 0]
 
         # ソート
         if sort_col == "明日（降順）":

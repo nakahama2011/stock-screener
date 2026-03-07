@@ -314,7 +314,19 @@ def run_analysis(use_sample: bool = False):
     with open(report_path, "w", encoding="utf-8") as f:
         f.write(html)
 
+    # TOP30組み合わせをJSONで保存する（screener_uiで利用）
+    import json
+    combo_json = {
+        "combos_5d": results.get("combos", []),
+        "combos_2pct": results.get("combos_2pct", []),
+        "overall": results["overall"],
+    }
+    combo_json_path = os.path.join(OUTPUT_DIR, "top_combos.json")
+    with open(combo_json_path, "w", encoding="utf-8") as f:
+        json.dump(combo_json, f, ensure_ascii=False, indent=2)
+
     print(f"\n✅ レポートを保存しました: {report_path}")
+    print(f"   TOP30 JSON: {combo_json_path}")
     print(f"   ブラウザで開いてください: file://{os.path.abspath(report_path)}")
 
     return results
