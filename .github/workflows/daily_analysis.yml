@@ -1,0 +1,38 @@
+# 毎日取引終了後に特徴量分析を自動更新するワークフロー
+# 東証取引終了（15:00 JST）+ データ反映待ち → 16:30 JST（= 07:30 UTC）に実行
+name: 📊 特徴量分析 自動更新
+
+on:
+  schedule:
+    # 月〜金の 07:30 UTC（= 16:30 JST）に実行
+    - cron: '30 7 * * 1-5'
+  workflow_dispatch:  # 手動実行も可能
+
+jobs:
+  update-analysis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: 📥 コードをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: 🐍 Python セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 📦 依存パッケージをインストール
+        run: pip install -r requirements.txt
+
+      - name: 📊 全銘柄分析を実行
+        run: python analyze_features.py
+
+      - name: 📤 結果をコミット＆プッシュ
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add results/top_combos.json results/feature_analysis_report.html
+          git diff --cached --quiet || git commit -m "📊 分析データ自動更新 $(TZ=Asia/Tokyo date '+%Y-%m-%d')"
+          git push
