@@ -435,6 +435,11 @@ if run_button:
     as_of_str = selected_date.strftime("%Y-%m-%d")
 
     with st.spinner(f"⏳ {as_of_str} のデータを取得・分析中..."):
+        # 当日検索時はキャッシュをクリアして最新データを取得する
+        from datetime import date as _date_cls
+        if as_of_str == _date_cls.today().strftime("%Y-%m-%d"):
+            _fetch_all_data.clear()
+
         result_df, err_msg, date_labels = run_single_day_screen(
             as_of_str,
             min_volume,
