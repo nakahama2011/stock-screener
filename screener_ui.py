@@ -380,26 +380,30 @@ def run_single_day_screen(
     for _code, (_name, _df) in all_data.items():
         _past  = _df[_df.index <= signal_ts]
         _future = _df[_df.index > signal_ts]
-        if len(_past) >= 3 and len(_future) >= 2:
+        if len(_past) >= 3:
             t   = _past.index[-1]
             t_1 = _past.index[-2]
             t_2 = _past.index[-3]
-            t1  = _future.index[0] if len(_future) > 0 else None
-            t2  = _future.index[1] if len(_future) > 1 else None
-            t3  = _future.index[2] if len(_future) > 2 else None
-            t4  = _future.index[3] if len(_future) > 3 else None
-            t5  = _future.index[4] if len(_future) > 4 else None
-            
+
             date_labels = {
-                "前々日(%)": f"{t_2.month}/{t_2.day}" if t_2 else "前々日(%)",
-                "前日(%)": f"{t_1.month}/{t_1.day}" if t_1 else "前日(%)",
-                "当日(%)": f"{t.month}/{t.day}" if t else "当日(%)",
+                "前々日(%)": f"{t_2.month}/{t_2.day}",
+                "前日(%)": f"{t_1.month}/{t_1.day}",
+                "当日(%)": f"{t.month}/{t.day}",
             }
-            if t1: date_labels["明日(%)"] = f"{t1.month}/{t1.day}"
-            if t2: date_labels["明後日(%)"] = f"{t2.month}/{t2.day}"
-            if t3: date_labels["3日後(%)"] = f"{t3.month}/{t3.day}"
-            if t4: date_labels["4日後(%)"] = f"{t4.month}/{t4.day}"
-            if t5: date_labels["5日後(%)"] = f"{t5.month}/{t5.day}"
+
+            # 将来の営業日を取得する（データがあればそこから、なければカレンダーで推定する）
+            if len(_future) >= 5:
+                for j, label in enumerate(["明日(%)", "明後日(%)", "3日後(%)", "4日後(%)", "5日後(%)"]):
+                    date_labels[label] = f"{_future.index[j].month}/{_future.index[j].day}"
+            else:
+                # データがない場合は営業日を推定する（土日を飛ばす）
+                from datetime import timedelta
+                _next = t.to_pydatetime()
+                for label in ["明日(%)", "明後日(%)", "3日後(%)", "4日後(%)", "5日後(%)"]:
+                    _next += timedelta(days=1)
+                    while _next.weekday() >= 5:  # 土日を飛ばす
+                        _next += timedelta(days=1)
+                    date_labels[label] = f"{_next.month}/{_next.day}"
             break
 
     # 表示する列と順序を定義する
