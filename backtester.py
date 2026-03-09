@@ -339,6 +339,55 @@ def screen_at_date(
         if not pd.isna(sma100):
             weekly_sma20_ok = bool(close > float(sma100))
 
+    # ---- 初回SMA20タッチ判定 ----
+    # SMA5>SMA20>SMA60 のトレンド開始日を特定し、
+    # それ以降で安値がSMA20の1.5%以内に接近した回数をカウントする
+    first_sma20_touch = False
+    sma20_touch_count = 0
+    trend_start_days_ago = 0
+
+    if len(past_df) >= 20 and "SMA5" in past_df.columns and "SMA20" in past_df.columns and "SMA60" in past_df.columns:
+        _sma5_s  = past_df["SMA5"]
+        _sma20_s = past_df["SMA20"]
+        _sma60_s = past_df["SMA60"]
+        _low_s   = past_df["Low"] if "Low" in past_df.columns else past_df["Close"]
+
+        # トレンド開始日を逆順に探す（最新日から遡る）
+        trend_start_idx = len(past_df) - 1
+        for k in range(len(past_df) - 2, -1, -1):
+            s5  = _sma5_s.iloc[k]
+            s20 = _sma20_s.iloc[k]
+            s60 = _sma60_s.iloc[k]
+            if pd.isna(s5) or pd.isna(s20) or pd.isna(s60):
+                trend_start_idx = k + 1
+                break
+            if not (s5 > s20 > s60):
+                trend_start_idx = k + 1
+                break
+            trend_start_idx = k
+
+        trend_start_days_ago = len(past_df) - 1 - trend_start_idx
+
+        # トレンド開始以降のSMA20タッチ回数をカウントする
+        # タッチ = 安値がSMA20の1.5%以内に接近
+        _touch_threshold = 0.015
+        _in_touch = False  # 連続タッチを1回としてカウント
+        for k in range(trend_start_idx, len(past_df)):
+            _s20_val = float(_sma20_s.iloc[k])
+            _low_val = float(_low_s.iloc[k])
+            if _s20_val > 0:
+                _dist = (_low_val - _s20_val) / _s20_val
+                if _dist <= _touch_threshold:
+                    if not _in_touch:
+                        sma20_touch_count += 1
+                        _in_touch = True
+                else:
+                    _in_touch = False
+
+        # 初回タッチ = タッチ回数が1回で、かつ今日がタッチ中
+        _today_dist = (low_price - sma20) / sma20 if sma20 > 0 else 999
+        first_sma20_touch = bool(sma20_touch_count == 1 and _today_dist <= _touch_threshold)
+
     # 曜日（0=月曜, 4=金曜）
     day_of_week = int(as_of.weekday())
 
@@ -368,6 +417,9 @@ def screen_at_date(
         "is_high_zone":          is_high_zone,
         "big_bearish_yesterday": big_bearish_yesterday,
         "weekly_sma20_ok":       weekly_sma20_ok,
+        "first_sma20_touch":     first_sma20_touch,
+        "sma20_touch_count":     sma20_touch_count,
+        "trend_start_days_ago":  trend_start_days_ago,
         "day_of_week":           day_of_week,
     }
 

@@ -362,6 +362,9 @@ def run_single_day_screen(
             "_long_upper_wick":       screen_result.get("long_upper_wick", False),
             "_is_high_zone":          screen_result.get("is_high_zone", False),
             "_big_bearish_yesterday": screen_result.get("big_bearish_yesterday", False),
+            "_first_sma20_touch":     screen_result.get("first_sma20_touch", False),
+            "_sma20_touch_count":     screen_result.get("sma20_touch_count", 0),
+            "_trend_days":            screen_result.get("trend_start_days_ago", 0),
             "_day_of_week":           screen_result.get("day_of_week", -1),
         })
 
@@ -503,6 +506,7 @@ if "result_df" in st.session_state:
                     "3日以内プラスのみ",
                     "5日以内プラスのみ",
                     "🏆 TOP30該当のみ",
+                    "🎯 初回SMA20タッチ",
                 ],
                 key="show_filter",
             )
@@ -733,6 +737,9 @@ if "result_df" in st.session_state:
         elif show_filter == "🏆 TOP30該当のみ":
             if "🏆TOP該当" in display_df.columns:
                 display_df = display_df[display_df["🏆TOP該当"].astype(str).str.len() > 0]
+        elif show_filter == "🎯 初回SMA20タッチ":
+            if "_first_sma20_touch" in display_df.columns:
+                display_df = display_df[display_df["_first_sma20_touch"] == True]
 
         # ソート
         if sort_col == "明日（降順）":
