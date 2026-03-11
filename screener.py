@@ -6,12 +6,15 @@ TradingView Screener APIを使用して、日足条件
 日本株の候補銘柄を自動スクリーニングする。
 """
 
+import io
 import json
 import os
 import time
 from datetime import datetime
 from typing import Dict, Any, List
 
+import pandas as pd
+import requests
 from tradingview_screener import Query, col
 
 
@@ -26,6 +29,29 @@ TV_LIMIT = 500
 
 # 結果出力先ディレクトリ
 OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
+
+# JPX上場銘柄一覧CSVのURL
+JPX_CSV_URL = "https://www.jpx.co.jp/markets/statistics-equities/misc/tvdivq0000001vg2-att/data_j.xls"
+
+
+# =========================================================
+# JPX銘柄一覧から日本語名を取得
+# =========================================================
+def _fetch_jpx_name_map() -> Dict[int, str]:
+    """
+    JPXの上場銘柄一覧から {銘柄コード: 日本語銘柄名} のマッピングを取得する。
+    取得失敗時は空の辞書を返す。
+    """
+    try:
+        resp = requests.get(JPX_CSV_URL, timeout=30)
+        resp.raise_for_status()
+        df = pd.read_excel(io.BytesIO(resp.content))
+        df = df.rename(columns={"コード": "code", "銘柄名": "name"})
+        df = df[pd.to_numeric(df["code"], errors="coerce").notna()]
+        df["code"] = df["code"].astype(int)
+        return dict(zip(df["code"], df["name"]))
+    except Exception:
+        return {}
 
 
 # =========================================================
@@ -75,6 +101,14 @@ def run_screening() -> List[Dict[str, Any]]:
         print("  ⚠️ 条件に合致する銘柄がありませんでした")
         return []
 
+    # JPX銘柄一覧から日本語名を取得（英語名の代わりに使用）
+    print("📥 JPX銘柄一覧から日本語名を取得中...")
+    jpx_names = _fetch_jpx_name_map()
+    if jpx_names:
+        print(f"  ✅ {len(jpx_names)}銘柄の日本語名を取得")
+    else:
+        print("  ⚠️ JPX名取得失敗、英語名を使用します")
+
     # データフレームを辞書のリストに変換
     today_str = datetime.now().strftime("%Y-%m-%d")
     candidates = []
@@ -103,7 +137,7 @@ def run_screening() -> List[Dict[str, Any]]:
         candidate = {
             "code": code,
             "symbol": f"{code}.T",
-            "name": str(row.get("description", row.get("name", ""))),
+            "name": jpx_names.get(code, str(row.get("description", row.get("name", "")))),
             "date": today_str,
             "close": round(float(close_val), 1) if close_val == close_val else 0,
             "sma5": round(float(sma5_val), 1) if sma5_val == sma5_val else 0,

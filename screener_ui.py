@@ -269,6 +269,7 @@ def _fetch_tv_candidates(min_volume_val: int = DEFAULT_MIN_VOLUME) -> dict:
     """
     TradingView Screener APIで、SMA順行配列+出来高条件を満たす
     日本株の候補銘柄コードと名前を取得する。
+    JPX銘柄一覧から日本語名を取得してマッピングする。
 
     Returns:
         dict: {銘柄コード(int): 銘柄名(str)} のマッピング
@@ -290,13 +291,29 @@ def _fetch_tv_candidates(min_volume_val: int = DEFAULT_MIN_VOLUME) -> dict:
             .limit(500)
             .get_scanner_data())
 
+        # JPX銘柄一覧から日本語名を取得
+        jpx_names = {}
+        try:
+            import io as _io
+            _jpx_url = "https://www.jpx.co.jp/markets/statistics-equities/misc/tvdivq0000001vg2-att/data_j.xls"
+            _resp = requests.get(_jpx_url, timeout=30)
+            _resp.raise_for_status()
+            _jpx_df = pd.read_excel(_io.BytesIO(_resp.content))
+            _jpx_df = _jpx_df.rename(columns={"コード": "code", "銘柄名": "name"})
+            _jpx_df = _jpx_df[pd.to_numeric(_jpx_df["code"], errors="coerce").notna()]
+            _jpx_df["code"] = _jpx_df["code"].astype(int)
+            jpx_names = dict(zip(_jpx_df["code"], _jpx_df["name"]))
+        except Exception:
+            pass
+
         candidates = {}
         for _, row in df.iterrows():
             ticker_str = str(row.get("ticker", ""))
             code_str = ticker_str.split(":")[-1] if ":" in ticker_str else ticker_str
             try:
                 code = int(code_str)
-                name = str(row.get("description", row.get("name", "")))
+                # JPX日本語名を優先、なければTVの英語名を使用
+                name = jpx_names.get(code, str(row.get("description", row.get("name", ""))))
                 candidates[code] = name
             except ValueError:
                 continue
