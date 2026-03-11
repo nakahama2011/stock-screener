@@ -831,47 +831,32 @@ if "result_df" in st.session_state:
         st.markdown(f"**{len(display_df)}件 表示中**（全 {n}件）")
 
         # ---- KPIサマリー（フィルタ後のデータで計算） ----
-        kpi_df = display_df[display_df["明日(%)"].notna()]
-        n_kpi = len(kpi_df)
-
         col_k1, col_k2, col_k3, col_k4 = st.columns(4)
         with col_k1:
             st.metric("候補銘柄数", f"{len(display_df)}件")
         with col_k2:
-            win_rate_1d = (kpi_df["明日(%)"] > 0).sum() / n_kpi * 100 if n_kpi > 0 else None
-            st.metric("明日勝率", f"{win_rate_1d:.1f}%" if win_rate_1d is not None else "N/A")
+            _tomorrow_valid = display_df[display_df["明日(%)"].notna()]
+            n_1d = len(_tomorrow_valid)
+            win_rate_1d = (_tomorrow_valid["明日(%)"] > 0).sum() / n_1d * 100 if n_1d > 0 else None
+            st.metric("明日勝率", f"{win_rate_1d:.1f}% ({n_1d}件)" if win_rate_1d is not None else "N/A")
         with col_k3:
-            if "3日以内プラス" in kpi_df.columns:
-                n_valid_3d = kpi_df["3日以内プラス"].notna().sum()
+            if "3日以内プラス" in display_df.columns:
+                _valid_3d = display_df[display_df["3日以内プラス"].notna()]
+                n_valid_3d = len(_valid_3d)
                 if n_valid_3d > 0:
-                    win_rate_3d = (kpi_df["3日以内プラス"] == 1).sum() / n_valid_3d * 100
-                    # 3日以内のプラス銘柄の平均リターンを計算する
-                    _ret_3d_cols = [c for c in ["明日(%)", "明後日(%)", "3日後(%)"] if c in kpi_df.columns]
-                    if _ret_3d_cols:
-                        _max_3d = kpi_df[_ret_3d_cols].max(axis=1)
-                        _avg_3d = _max_3d[_max_3d > 0].mean()
-                        _delta_3d = f"平均 +{_avg_3d:.2f}%" if not pd.isna(_avg_3d) else None
-                    else:
-                        _delta_3d = None
-                    st.metric("3日以内勝率", f"{win_rate_3d:.1f}%", delta=_delta_3d)
+                    win_rate_3d = (_valid_3d["3日以内プラス"] == 1).sum() / n_valid_3d * 100
+                    st.metric("3日以内勝率", f"{win_rate_3d:.1f}% ({n_valid_3d}件)")
                 else:
                     st.metric("3日以内勝率", "N/A")
             else:
                 st.metric("3日以内勝率", "N/A")
         with col_k4:
-            if "5日以内プラス" in kpi_df.columns:
-                n_valid_5d = kpi_df["5日以内プラス"].notna().sum()
+            if "5日以内プラス" in display_df.columns:
+                _valid_5d = display_df[display_df["5日以内プラス"].notna()]
+                n_valid_5d = len(_valid_5d)
                 if n_valid_5d > 0:
-                    win_rate_5d = (kpi_df["5日以内プラス"] == 1).sum() / n_valid_5d * 100
-                    # 5日以内のプラス銘柄の平均リターンを計算する
-                    _ret_5d_cols = [c for c in ["明日(%)", "明後日(%)", "3日後(%)", "4日後(%)", "5日後(%)"] if c in kpi_df.columns]
-                    if _ret_5d_cols:
-                        _max_5d = kpi_df[_ret_5d_cols].max(axis=1)
-                        _avg_5d = _max_5d[_max_5d > 0].mean()
-                        _delta_5d = f"平均 +{_avg_5d:.2f}%" if not pd.isna(_avg_5d) else None
-                    else:
-                        _delta_5d = None
-                    st.metric("5日以内勝率", f"{win_rate_5d:.1f}%", delta=_delta_5d)
+                    win_rate_5d = (_valid_5d["5日以内プラス"] == 1).sum() / n_valid_5d * 100
+                    st.metric("5日以内勝率", f"{win_rate_5d:.1f}% ({n_valid_5d}件)")
                 else:
                     st.metric("5日以内勝率", "N/A")
             else:
@@ -1030,16 +1015,7 @@ if "result_df" in st.session_state:
                 bd.append(["大陰線直後", "-20"])
             breakdown_data[str(code)] = bd
 
-            # 銘柄コードセル：クリックでTradingViewに遷移するリンク
-            # 予測スコアに応じたバッジ（data-codeで内訳を参照）
-            score_val = int(row.get("予測スコア", 0))
-            if score_val >= 60:
-                badge = (f'<span class="score-badge badge-high" data-code="{code}">⚡ {score_val}pt</span>')
-            elif score_val >= 40:
-                badge = (f'<span class="score-badge badge-mid" data-code="{code}">🔮 {score_val}pt</span>')
-            else:
-                badge = (f'<span class="score-badge badge-low" data-code="{code}">{score_val}pt</span>')
-            name_cell = f'<td class="name-cell">{badge} {name}</td>'
+            name_cell = f'<td class="name-cell">{name}</td>'
 
             other_cells = ""
             for col in other_cols:
