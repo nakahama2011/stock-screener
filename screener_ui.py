@@ -1210,12 +1210,12 @@ tr:hover td{{background:rgba(255,255,255,0.03)}}
         st.markdown("---")
         col_dl1, col_dl2 = st.columns([1, 4])
         with col_dl1:
-            csv_data = display_df.to_csv(index=False, encoding="utf-8-sig")
+            csv_data = display_df.to_csv(index=False).encode("utf-8-sig")
             st.download_button(
                 label="⬇️ CSV ダウンロード",
                 data=csv_data,
                 file_name=f"screening_{as_of_str.replace('-','')}.csv",
-                mime="text/csv",
+                mime="text/csv; charset=utf-8-sig",
             )
         with col_dl2:
             st.caption("※ 現在の絞り込み結果がダウンロードされます")
