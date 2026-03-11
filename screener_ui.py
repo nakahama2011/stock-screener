@@ -16,6 +16,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date, datetime, timedelta
 
 import pandas as pd
+import requests
 import streamlit as st
 
 # -- レポート用HTTPサーバー（ポート8502）をバックグラウンドで起動する ----------
