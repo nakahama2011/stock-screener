@@ -746,7 +746,7 @@ if "result_df" in st.session_state:
                     if all(_check_condition(row, c) for c in conditions):
                         rank = i + 1
                         medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else f"#{rank}"
-                        matched.append(f"{medal}({combo['win_rate']}%)")
+                        matched.append(medal)
                         if len(matched) >= 5:  # 最大5つ表示
                             break
                 return " ".join(matched) if matched else ""
@@ -831,34 +831,35 @@ if "result_df" in st.session_state:
         st.markdown(f"**{len(display_df)}件 表示中**（全 {n}件）")
 
         # ---- KPIサマリー（フィルタ後のデータで計算） ----
+        # 全銘柄を対象にする（NaNは「未達」としてカウント）
+        n_total = len(display_df)
         col_k1, col_k2, col_k3, col_k4 = st.columns(4)
         with col_k1:
-            st.metric("候補銘柄数", f"{len(display_df)}件")
+            st.metric("候補銘柄数", f"{n_total}件")
         with col_k2:
             _tomorrow_valid = display_df[display_df["明日(%)"].notna()]
             n_1d = len(_tomorrow_valid)
-            win_rate_1d = (_tomorrow_valid["明日(%)"] > 0).sum() / n_1d * 100 if n_1d > 0 else None
-            st.metric("明日勝率", f"{win_rate_1d:.1f}% ({n_1d}件)" if win_rate_1d is not None else "N/A")
+            if n_1d > 0:
+                win_rate_1d = (_tomorrow_valid["明日(%)"] > 0).sum() / n_1d * 100
+                st.metric("明日勝率", f"{win_rate_1d:.1f}% ({n_1d}件)")
+            else:
+                st.metric("明日勝率", "N/A")
         with col_k3:
             if "3日以内プラス" in display_df.columns:
-                _valid_3d = display_df[display_df["3日以内プラス"].notna()]
-                n_valid_3d = len(_valid_3d)
-                if n_valid_3d > 0:
-                    win_rate_3d = (_valid_3d["3日以内プラス"] == 1).sum() / n_valid_3d * 100
-                    st.metric("3日以内勝率", f"{win_rate_3d:.1f}% ({n_valid_3d}件)")
-                else:
-                    st.metric("3日以内勝率", "N/A")
+                # NaNを0（未達）として全件で計算
+                _col_3d = display_df["3日以内プラス"].fillna(0)
+                n_win_3d = int((_col_3d == 1).sum())
+                win_rate_3d = n_win_3d / n_total * 100 if n_total > 0 else 0
+                st.metric("3日以内勝率", f"{win_rate_3d:.1f}% ({n_win_3d}/{n_total})")
             else:
                 st.metric("3日以内勝率", "N/A")
         with col_k4:
             if "5日以内プラス" in display_df.columns:
-                _valid_5d = display_df[display_df["5日以内プラス"].notna()]
-                n_valid_5d = len(_valid_5d)
-                if n_valid_5d > 0:
-                    win_rate_5d = (_valid_5d["5日以内プラス"] == 1).sum() / n_valid_5d * 100
-                    st.metric("5日以内勝率", f"{win_rate_5d:.1f}% ({n_valid_5d}件)")
-                else:
-                    st.metric("5日以内勝率", "N/A")
+                # NaNを0（未達）として全件で計算
+                _col_5d = display_df["5日以内プラス"].fillna(0)
+                n_win_5d = int((_col_5d == 1).sum())
+                win_rate_5d = n_win_5d / n_total * 100 if n_total > 0 else 0
+                st.metric("5日以内勝率", f"{win_rate_5d:.1f}% ({n_win_5d}/{n_total})")
             else:
                 st.metric("5日以内勝率", "N/A")
 
