@@ -5,4 +5,5 @@ pandas-ta-classic
 numpy
 requests
 openpyxl
+xlrd
 tradingview-screener
