@@ -53,6 +53,13 @@ from backtester import (
     MAX_WORKERS,
 )
 
+# TradingView Screener API
+try:
+    from tradingview_screener import Query, col as tv_col
+    TV_API_AVAILABLE = True
+except ImportError:
+    TV_API_AVAILABLE = False
+
 
 # =====================================================
 # ページ設定
@@ -256,28 +263,80 @@ with st.sidebar:
 
 
 # =====================================================
+# TradingView APIで候補銘柄を事前取得（プレフィルタ）
+# =====================================================
+def _fetch_tv_candidates(min_volume_val: int = DEFAULT_MIN_VOLUME) -> dict:
+    """
+    TradingView Screener APIで、SMA順行配列+出来高条件を満たす
+    日本株の候補銘柄コードと名前を取得する。
+
+    Returns:
+        dict: {銘柄コード(int): 銘柄名(str)} のマッピング
+    """
+    if not TV_API_AVAILABLE:
+        return {}
+
+    try:
+        (count, df) = (Query()
+            .set_markets('japan')
+            .select('name', 'description', 'close', 'volume',
+                    'SMA5', 'SMA20', 'SMA60')
+            .where(
+                tv_col('SMA5') > tv_col('SMA20'),
+                tv_col('SMA20') > tv_col('SMA60'),
+                tv_col('volume') > min_volume_val,
+            )
+            .order_by('volume', ascending=False)
+            .limit(500)
+            .get_scanner_data())
+
+        candidates = {}
+        for _, row in df.iterrows():
+            ticker_str = str(row.get("ticker", ""))
+            code_str = ticker_str.split(":")[-1] if ":" in ticker_str else ticker_str
+            try:
+                code = int(code_str)
+                name = str(row.get("description", row.get("name", "")))
+                candidates[code] = name
+            except ValueError:
+                continue
+        return candidates
+    except Exception:
+        return {}
+
+
+# =====================================================
 # データ取得関数（キャッシュ付き — 日付とサンプルフラグのみで管理）
 # =====================================================
 @st.cache_data(ttl=3600, show_spinner=False)
 def _fetch_all_data(as_of_date_str: str, use_sample_val: bool):
     """
-    yfinance からの株価データ取得のみ行いキャッシュする。
-    スクリーニング条件（プルバック等）は含まないため、条件変更時に再取得されない。
+    TradingView APIで候補銘柄を特定し、その候補のみ yfinance で
+    株価データを取得してキャッシュする。
+    TV APIが利用不可の場合は従来通り全銘柄を取得する。
     """
     as_of_dt = datetime.strptime(as_of_date_str, "%Y-%m-%d")
     fetch_start = (as_of_dt - timedelta(days=HISTORY_BUFFER_DAYS)).strftime("%Y-%m-%d")
     fetch_end = (as_of_dt + timedelta(days=14)).strftime("%Y-%m-%d")
 
-    tickers_df = _fallback_tickers() if use_sample_val else fetch_jpx_tickers()
-    total = len(tickers_df)
+    # TradingView APIで候補銘柄を事前取得（プレフィルタ）
+    tv_candidates = _fetch_tv_candidates()
+
+    if tv_candidates and not use_sample_val:
+        # TV APIの候補銘柄のみを対象にする（3,800銘柄→約100銘柄に削減）
+        tickers_data = [(code, name) for code, name in tv_candidates.items()]
+        total = len(tickers_data)
+    else:
+        # フォールバック：従来通り全銘柄を取得する
+        tickers_df = _fallback_tickers() if use_sample_val else fetch_jpx_tickers()
+        tickers_data = [(int(row["code"]), str(row.get("name", ""))) for _, row in tickers_df.iterrows()]
+        total = len(tickers_data)
 
     # 並列データ取得
     all_data = {}
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = {}
-        for _, row in tickers_df.iterrows():
-            code = int(row["code"])
-            name = str(row.get("name", ""))
+        for code, name in tickers_data:
             f = executor.submit(fetch_ticker_history, code, name, fetch_start, fetch_end)
             futures[f] = (code, name)
 
@@ -1186,7 +1245,7 @@ else:
     with col2:
         st.markdown("""
         ### ⚡ クイックスタート
-        **実行時間の目安：** 10〜30分（初回はデータ取得に時間がかかります。2回目以降はキャッシュで高速化されます。）
+        **実行時間の目安：** 1〜3分（TradingView APIで候補を絞り込んでからデータ取得するため高速です。2回目以降はキャッシュで即時表示。）
 
         **ヒント：** 同日・同条件の再実行はキャッシュが効き即時表示。
         """)
