@@ -6,6 +6,7 @@
 モード:
   - 今日: TradingView Screener API でリアルタイム取得（約1秒）
   - 過去日付: backtester.py のインフラを利用してバックテスト
+    → 5日後/10日後/15日後/20日後/30日後のリターンを算出
 """
 
 import io
@@ -31,7 +32,6 @@ sys.path.insert(0, SCRIPT_DIR)
 from backtester import (
     fetch_jpx_tickers,
     fetch_ticker_history,
-    calc_forward_returns,
     MAX_WORKERS,
 )
 
@@ -59,8 +59,9 @@ st.set_page_config(
 # =====================================================
 OUTPUT_DIR = os.path.join(SCRIPT_DIR, "results")
 JPX_CSV_URL = "https://www.jpx.co.jp/markets/statistics-equities/misc/tvdivq0000001vg2-att/data_j.xls"
-# SMA60 + RSI + MACD 計算に必要な最小バッファ（120営業日）
 HISTORY_BUFFER_DAYS = 120
+# リターン算出期間（営業日）
+RETURN_DAYS = [5, 10, 15, 20, 30]
 
 
 # =====================================================
@@ -245,7 +246,7 @@ def run_today(perf_thr: float, rsi_min: float, rsi_max: float, min_vol: int) -> 
         .select('name','description','close','volume',
                 'SMA5','SMA20','SMA60','SMA200',
                 'RSI','MACD.macd','MACD.signal',
-                'Perf.3M','Perf.6M','High.3M','Low.3M',
+                'Perf.3M','High.3M','Low.3M',
                 'relative_volume_10d_calc','change')
         .where(
             tv_col('Perf.3M') < perf_thr,
@@ -268,48 +269,27 @@ def run_today(perf_thr: float, rsi_min: float, rsi_max: float, min_vol: int) -> 
         cs = ts.split(":")[-1] if ":" in ts else ts
         try: code = int(cs)
         except ValueError: continue
-        cl = float(r.get("close",0)); s200 = float(r.get("SMA200",0))
-        h3 = _safe_float(r.get("High.3M")); l3 = _safe_float(r.get("Low.3M"))
-        rp = round((cl-l3)/(h3-l3)*100,1) if h3 and l3 and h3>l3 else None
-        sd = round((cl-s200)/s200*100,2) if s200>0 else None
         cands.append({
             "code": code,
-            "name": jpx.get(code, str(r.get("description",r.get("name","")))),
-            "close": round(cl,1),
-            "rsi": round(float(r.get("RSI",0)),1),
-            "macd": round(float(r.get("MACD.macd",0)),4),
-            "macd_signal": round(float(r.get("MACD.signal",0)),4),
-            "perf_3m": round(_safe_float(r.get("Perf.3M")) or 0,2),
-            "sma200_dev": sd, "reversal_pos": rp,
-            "change": round(_safe_float(r.get("change")) or 0,2) if _safe_float(r.get("change")) else None,
-            "volume": int(r.get("volume",0)),
-            "rel_vol": round(_safe_float(r.get("relative_volume_10d_calc")) or 0,2) if _safe_float(r.get("relative_volume_10d_calc")) else None,
-            "ret_1d": None, "ret_2d": None, "ret_3d": None, "ret_5d": None,
+            "name": jpx.get(code, str(r.get("description", r.get("name","")))),
+            "prev_volume": None,  # TradingView APIでは前日出来高取得不可
+            "volume": int(r.get("volume", 0)),
+            "ret_5d": None, "ret_10d": None, "ret_15d": None,
+            "ret_20d": None, "ret_30d": None,
         })
     cands.sort(key=lambda x: x["volume"], reverse=True)
     return cands
 
 
 # =====================================================
-# バックテスト（過去日付用） — backtester.py インフラ再利用
+# バックテスト（過去日付用）
 # =====================================================
 def _screen_reversal_at_date(
-    df: pd.DataFrame,
-    as_of: pd.Timestamp,
-    min_vol: int,
-    rsi_min: float,
-    rsi_max: float,
-    perf_thr: float,
+    df: pd.DataFrame, as_of: pd.Timestamp,
+    min_vol: int, rsi_min: float, rsi_max: float, perf_thr: float,
 ) -> Optional[Dict]:
-    """
-    指定日時点で底打ち反転条件を判定する。
-    backtester.py の screen_at_date と同じ構造で未来データ混入を防止する。
-
-    SMA200の代わりにSMA60を使用（データ量の制約を回避）。
-    """
+    """指定日時点で底打ち反転条件を判定する。"""
     past_df = df[df.index <= as_of].copy()
-
-    # SMA60計算に最低60行、RSI/MACDに追加30行は必要
     if len(past_df) < 60:
         return None
 
@@ -318,8 +298,8 @@ def _screen_reversal_at_date(
     past_df["SMA60"] = past_df["Close"].rolling(60).mean()
 
     latest = past_df.iloc[-1]
-    for col_name in ["SMA5", "SMA20", "SMA60", "Volume"]:
-        if pd.isna(latest[col_name]):
+    for c in ["SMA5", "SMA20", "SMA60", "Volume"]:
+        if pd.isna(latest[c]):
             return None
 
     close = float(latest["Close"])
@@ -328,93 +308,84 @@ def _screen_reversal_at_date(
     sma60 = float(latest["SMA60"])
     volume = int(latest["Volume"])
 
-    # 条件1: 出来高
-    if volume < min_vol:
-        return None
-    # 条件2: 終値 < SMA60（長期的に弱い）
-    if close >= sma60:
-        return None
-    # 条件3: SMA5 > SMA20（短期上昇転換）
-    if not (sma5 > sma20):
-        return None
-    # 条件4: 終値 > SMA5
-    if close <= sma5:
-        return None
+    if volume < min_vol: return None
+    if close >= sma60: return None
+    if not (sma5 > sma20): return None
+    if close <= sma5: return None
 
-    # 条件5: 3ヶ月パフォーマンス
-    perf_window = min(60, len(past_df) - 1)
-    if perf_window < 40:
-        return None
-    close_3m_ago = float(past_df.iloc[-(perf_window + 1)]["Close"])
-    perf_3m = (close - close_3m_ago) / close_3m_ago * 100 if close_3m_ago > 0 else 0
-    if perf_3m >= perf_thr:
-        return None
+    # 3ヶ月パフォーマンス
+    pw = min(60, len(past_df) - 1)
+    if pw < 40: return None
+    c3m = float(past_df.iloc[-(pw+1)]["Close"])
+    p3m = (close - c3m) / c3m * 100 if c3m > 0 else 0
+    if p3m >= perf_thr: return None
 
-    # 条件6: RSI(14)
+    # RSI(14)
     delta = past_df["Close"].diff()
     gain = delta.clip(lower=0)
     loss = (-delta).clip(lower=0)
-    avg_gain = gain.ewm(alpha=1/14, adjust=False).mean()
-    avg_loss = loss.ewm(alpha=1/14, adjust=False).mean()
-    rs = avg_gain.iloc[-1] / avg_loss.iloc[-1] if avg_loss.iloc[-1] != 0 else float("inf")
+    ag = gain.ewm(alpha=1/14, adjust=False).mean()
+    al = loss.ewm(alpha=1/14, adjust=False).mean()
+    rs = ag.iloc[-1] / al.iloc[-1] if al.iloc[-1] != 0 else float("inf")
     rsi = 100 - 100 / (1 + rs)
-    if not (rsi_min <= rsi <= rsi_max):
-        return None
+    if not (rsi_min <= rsi <= rsi_max): return None
 
-    # 条件7: MACD > Signal
+    # MACD > Signal
     ema12 = past_df["Close"].ewm(span=12, adjust=False).mean()
     ema26 = past_df["Close"].ewm(span=26, adjust=False).mean()
-    macd_line = ema12 - ema26
-    signal_line = macd_line.ewm(span=9, adjust=False).mean()
-    macd_val = float(macd_line.iloc[-1])
-    signal_val = float(signal_line.iloc[-1])
-    if macd_val <= signal_val:
-        return None
+    macd = ema12 - ema26
+    signal = macd.ewm(span=9, adjust=False).mean()
+    if float(macd.iloc[-1]) <= float(signal.iloc[-1]): return None
 
-    # SMA60乖離率
-    sma60_dev = round((close - sma60) / sma60 * 100, 2)
-
-    # 反発度（3ヶ月レンジ）
-    w = past_df.tail(perf_window)
-    h3 = float(w["High"].max()) if "High" in w.columns else float(w["Close"].max())
-    l3 = float(w["Low"].min()) if "Low" in w.columns else float(w["Close"].min())
-    rp = round((close - l3) / (h3 - l3) * 100, 1) if h3 > l3 else None
-
-    # 当日変動
-    change = None
-    if len(past_df) >= 2:
-        pc = float(past_df.iloc[-2]["Close"])
-        if pc > 0:
-            change = round((close - pc) / pc * 100, 2)
+    # 前日出来高
+    prev_volume = int(past_df.iloc[-2]["Volume"]) if len(past_df) >= 2 else None
 
     return {
         "close": round(close, 1),
-        "rsi": round(rsi, 1),
-        "macd": round(macd_val, 4),
-        "macd_signal": round(signal_val, 4),
-        "perf_3m": round(perf_3m, 2),
-        "sma200_dev": sma60_dev,  # UIラベルは共通だがバックテスト時はSMA60乖離
-        "reversal_pos": rp,
-        "change": change,
         "volume": volume,
+        "prev_volume": prev_volume,
     }
+
+
+def _calc_cumulative_returns(
+    df: pd.DataFrame, signal_date: pd.Timestamp, days_list: List[int],
+) -> Dict[str, Optional[float]]:
+    """
+    シグナル日の終値で購入したと仮定して、
+    N日後の累積リターン（%）を計算する。
+    """
+    past = df[df.index <= signal_date]
+    if past.empty:
+        return {f"ret_{n}d": None for n in days_list}
+    base_close = float(past.iloc[-1]["Close"])
+    future = df[df.index > signal_date]
+
+    result = {}
+    for n in days_list:
+        key = f"ret_{n}d"
+        if len(future) >= n and base_close > 0:
+            fwd_close = float(future.iloc[n - 1]["Close"])
+            result[key] = round((fwd_close - base_close) / base_close * 100, 2)
+        else:
+            result[key] = None
+    return result
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def run_backtest(
     as_of_str: str, perf_thr: float, rsi_min: float, rsi_max: float, min_vol: int,
 ) -> List[Dict]:
-    """過去日付で底打ち反転銘柄をバックテストする。backtester.pyのインフラを使用。"""
+    """過去日付で底打ち反転銘柄をバックテストする。"""
     as_of_dt = datetime.strptime(as_of_str, "%Y-%m-%d")
     fetch_start = (as_of_dt - timedelta(days=HISTORY_BUFFER_DAYS)).strftime("%Y-%m-%d")
-    fetch_end = (as_of_dt + timedelta(days=14)).strftime("%Y-%m-%d")
+    # 30営業日後 ≒ カレンダー45日後
+    fetch_end = (as_of_dt + timedelta(days=50)).strftime("%Y-%m-%d")
 
     tickers_df = fetch_jpx_tickers()
     jpx_names = _fetch_jpx_name_map()
     if tickers_df.empty:
         return []
 
-    # データ取得（backtester.pyの fetch_ticker_history を使用）
     all_data = {}
     progress = st.progress(0, text="📥 株価データを取得中...")
     total = len(tickers_df)
@@ -431,7 +402,7 @@ def run_backtest(
         for f in as_completed(futures):
             done += 1
             if done % 100 == 0:
-                progress.progress(min(done / total, 1.0), text=f"📥 {done}/{total} 銘柄のデータ取得中...")
+                progress.progress(min(done/total, 1.0), text=f"📥 {done}/{total} 銘柄取得中...")
             code, name = futures[f]
             try:
                 res = f.result()
@@ -443,7 +414,6 @@ def run_backtest(
 
     progress.progress(1.0, text=f"✅ {len(all_data)}銘柄のデータ取得完了")
 
-    # スクリーニング
     signal_ts = pd.Timestamp(as_of_dt)
     candidates = []
     for code, (name, df) in all_data.items():
@@ -451,20 +421,15 @@ def run_backtest(
         if result is None:
             continue
 
-        # 翌日以降のリターン（backtester.pyのcalc_forward_returnsを利用）
-        fwd = calc_forward_returns(df, signal_ts)
+        fwd = _calc_cumulative_returns(df, signal_ts, RETURN_DAYS)
 
-        candidate = {
+        candidates.append({
             "code": code,
             "name": jpx_names.get(code, name),
-            **result,
-            "rel_vol": None,
-            "ret_1d": round(fwd.get(1), 2) if fwd.get(1) is not None else None,
-            "ret_2d": round(fwd.get(2), 2) if fwd.get(2) is not None else None,
-            "ret_3d": round(fwd.get(3), 2) if fwd.get(3) is not None else None,
-            "ret_5d": round(fwd.get(5), 2) if fwd.get(5) is not None else None,
-        }
-        candidates.append(candidate)
+            "prev_volume": result["prev_volume"],
+            "volume": result["volume"],
+            **fwd,
+        })
 
     candidates.sort(key=lambda x: x["volume"], reverse=True)
     return candidates
@@ -475,63 +440,67 @@ def run_backtest(
 # =====================================================
 def _build_table(cands: List[Dict], show_returns: bool = False) -> Tuple[str, int]:
     """HTMLテーブルを生成する。"""
+    # 基本列: 銘柄コード, 銘柄名, 前日出来高, 当日出来高
     cols = [
-        ("銘柄コード","left"),("銘柄名","left"),("終値","right"),
-        ("RSI","right"),("MACD","right"),("Signal","right"),
-        ("3M騰落","right"),("SMA乖離","right"),("反発度","right"),
-        ("当日変動","right"),("出来高","right"),
+        ("銘柄コード", "left"),
+        ("銘柄名", "left"),
+        ("前日出来高", "right"),
+        ("当日出来高", "right"),
     ]
+    # 過去日付時のリターン列
     if show_returns:
-        cols += [("翌日","right"),("2日後","right"),("3日後","right"),("5日後","right")]
+        for n in RETURN_DAYS:
+            cols.append((f"{n}日後", "right"))
 
-    th = "".join(f'<th style="text-align:{a}">{n}</th>' for n,a in cols)
+    th = "".join(f'<th style="text-align:{a}">{n}</th>' for n, a in cols)
     rows = ""
     tv = "https://jp.tradingview.com/chart/M3vhlCeS/?symbol=TSE%3A"
 
-    def _pc(v, s=30):
-        if v is None: return '<td>—</td>'
-        i = min(int(abs(v)/s*70),70)
-        c = "#10b981" if v>0 else "#ef4444"
-        b = "16,185,129" if v>0 else "239,68,68"
-        return f'<td style="background:rgba({b},0.{i:02d});color:{c};font-weight:bold">{v:+.1f}%</td>'
+    def _pc(v):
+        """パーセント値のセルを色付きで生成する。"""
+        if v is None:
+            return '<td>—</td>'
+        intensity = min(int(abs(v) / 10 * 70), 70)
+        if v > 0:
+            style = f"background:rgba(16,185,129,0.{intensity:02d});color:#10b981;font-weight:bold"
+        elif v < 0:
+            style = f"background:rgba(239,68,68,0.{intensity:02d});color:#ef4444;font-weight:bold"
+        else:
+            style = ""
+        return f'<td style="{style}">{v:+.2f}%</td>'
 
     for c in cands:
         cd = c["code"]
+        # 銘柄コード
         cc = f'<td class="code-cell"><a class="code-link" href="{tv}{cd}" target="_blank">{cd}</a></td>'
+        # 銘柄名
         nc = f'<td class="name-cell">{c["name"]}</td>'
-        cl = f'<td>{c["close"]:,.1f}</td>'
-        rsi = c["rsi"]
-        rs = "background:rgba(16,185,129,0.2);color:#10b981;font-weight:bold" if rsi<=35 else "background:rgba(16,185,129,0.1);color:#10b981" if rsi<=45 else ""
-        rc = f'<td style="{rs}">{rsi:.1f}</td>'
-        mc = f'<td>{c["macd"]:.4f}</td>'
-        sc = f'<td>{c["macd_signal"]:.4f}</td>'
-        p3 = _pc(c.get("perf_3m"))
-        dv = _pc(c.get("sma200_dev"))
-        rv = c.get("reversal_pos")
-        if rv is not None:
-            rvs = "background:rgba(168,85,247,0.2);color:#a855f7;font-weight:bold" if rv<25 else "background:rgba(168,85,247,0.12);color:#a855f7" if rv<50 else "color:#64748b"
-            rvc = f'<td style="{rvs}">{rv:.1f}%</td>'
-        else:
-            rvc = '<td>—</td>'
-        chg = _pc(c.get("change"), 5)
+        # 前日出来高
+        pv = c.get("prev_volume")
+        pvc = f'<td>{pv:,}</td>' if pv is not None else '<td>—</td>'
+        # 当日出来高
         vc = f'<td>{c["volume"]:,}</td>'
-        cells = cc+nc+cl+rc+mc+sc+p3+dv+rvc+chg+vc
+
+        cells = cc + nc + pvc + vc
+
         if show_returns:
-            for k in ["ret_1d","ret_2d","ret_3d","ret_5d"]:
-                cells += _pc(c.get(k), 3)
+            for n in RETURN_DAYS:
+                cells += _pc(c.get(f"ret_{n}d"))
+
         rows += f"<tr>{cells}</tr>\n"
 
-    n = len(cands)
-    h = min(max(n*42+60, 200), 700)
+    n_rows = len(cands)
+    h = min(max(n_rows * 42 + 60, 200), 700)
+
     html = f"""<!DOCTYPE html><html><head><meta charset="utf-8">
 <style>
 *{{box-sizing:border-box;margin:0;padding:0}}
 body{{font-family:-apple-system,'Noto Sans JP',sans-serif;background:transparent;overflow-x:auto}}
-table{{border-collapse:collapse;width:100%;font-size:12px}}
-th{{position:sticky;top:0;z-index:10;background:#1a2332;color:#8899aa;font-weight:600;padding:8px 10px;border-bottom:1px solid #2a3a4e;white-space:nowrap;cursor:pointer;user-select:none}}
+table{{border-collapse:collapse;width:100%;font-size:13px}}
+th{{position:sticky;top:0;z-index:10;background:#1a2332;color:#8899aa;font-weight:600;padding:8px 12px;border-bottom:1px solid #2a3a4e;white-space:nowrap;cursor:pointer;user-select:none}}
 th:hover{{background:#1e2d42!important}}
-td{{padding:7px 10px;text-align:right;border-bottom:1px solid rgba(255,255,255,0.04);color:#111;white-space:nowrap}}
-td.name-cell{{text-align:left;color:#111;max-width:180px;overflow:hidden;text-overflow:ellipsis}}
+td{{padding:8px 12px;text-align:right;border-bottom:1px solid rgba(255,255,255,0.04);color:#111;white-space:nowrap}}
+td.name-cell{{text-align:left;color:#111;max-width:200px;overflow:hidden;text-overflow:ellipsis}}
 td.code-cell{{text-align:left}}
 tr:hover td{{background:rgba(255,255,255,0.03)}}
 .code-link{{display:inline-block;color:#a855f7;font-weight:700;text-decoration:none;background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.4);border-radius:12px;padding:2px 10px;transition:background .15s}}
@@ -598,48 +567,40 @@ if "br_cands" in st.session_state:
         st.markdown(f"## 📋 スクリーニング結果（{run_at}）")
 
         n = len(cands)
-        avg_rsi = sum(c["rsi"] for c in cands) / n
-        avg_rev = [c["reversal_pos"] for c in cands if c.get("reversal_pos") is not None]
-        avg_p3 = [c["perf_3m"] for c in cands if c.get("perf_3m") is not None]
 
         if is_bt:
-            ret1 = [c["ret_1d"] for c in cands if c.get("ret_1d") is not None]
-            c1,c2,c3,c4,c5 = st.columns(5)
-            with c1: st.metric("検出銘柄数", f"{n}件")
-            with c2: st.metric("平均RSI", f"{avg_rsi:.1f}")
-            with c3:
-                st.metric("平均反発度", f"{sum(avg_rev)/len(avg_rev):.1f}%" if avg_rev else "N/A")
-            with c4:
-                if ret1:
-                    wr = sum(1 for r in ret1 if r>0)/len(ret1)*100
-                    st.metric("翌日勝率", f"{wr:.1f}%（{len(ret1)}件）")
-                else:
-                    st.metric("翌日勝率", "N/A")
-            with c5:
-                if ret1:
-                    st.metric("平均翌日リターン", f"{sum(ret1)/len(ret1):+.2f}%")
-                else:
-                    st.metric("平均翌日リターン", "N/A")
+            # バックテスト時: 各期間の勝率を表示
+            kpi_cols = st.columns(len(RETURN_DAYS) + 1)
+            with kpi_cols[0]:
+                st.metric("検出銘柄数", f"{n}件")
+            for i, nd in enumerate(RETURN_DAYS):
+                with kpi_cols[i + 1]:
+                    rets = [c[f"ret_{nd}d"] for c in cands if c.get(f"ret_{nd}d") is not None]
+                    if rets:
+                        wr = sum(1 for r in rets if r > 0) / len(rets) * 100
+                        avg_r = sum(rets) / len(rets)
+                        st.metric(f"{nd}日後勝率", f"{wr:.0f}%", delta=f"平均{avg_r:+.1f}%")
+                    else:
+                        st.metric(f"{nd}日後勝率", "N/A")
         else:
-            c1,c2,c3,c4 = st.columns(4)
-            with c1: st.metric("検出銘柄数", f"{n}件")
-            with c2: st.metric("平均RSI", f"{avg_rsi:.1f}")
-            with c3:
-                st.metric("平均反発度", f"{sum(avg_rev)/len(avg_rev):.1f}%" if avg_rev else "N/A")
-            with c4:
-                st.metric("平均3M騰落", f"{sum(avg_p3)/len(avg_p3):.1f}%" if avg_p3 else "N/A")
+            c1, c2 = st.columns(2)
+            with c1:
+                st.metric("検出銘柄数", f"{n}件")
+            with c2:
+                st.caption("💡 過去日付を選択すると、5〜30日後のリターンを確認できます")
 
+        # ---- テーブル ----
         tbl, th = _build_table(cands, show_returns=is_bt)
-        st.components.v1.html(tbl, height=th+4, scrolling=False)
+        st.components.v1.html(tbl, height=th + 4, scrolling=False)
 
-        st.markdown("---")
-        st.markdown("""
-        **📝 指標の読み方**
-        - **反発度**: (現在値 - 3ヶ月安値)/(3ヶ月高値 - 3ヶ月安値)×100。低いほど底に近い
-        - **SMA乖離**: 中長期移動平均線からの乖離率。マイナスが大きいほど弱い
-        - **RSI**: 30付近は売られすぎからの回復初期、50付近は上昇力が増している
-        - **MACD > Signal**: ゴールデンクロスで上昇モメンタムへの転換を示唆
-        """)
+        if is_bt:
+            st.markdown("---")
+            st.markdown("""
+            **📝 リターンの見方**
+            - 各「N日後」はシグナル日の**終値で購入**した場合の、N営業日後の終値との**累積リターン**（%）
+            - 🟢 プラス = 利益  🔴 マイナス = 損失
+            - 色の濃さがリターンの大きさに比例
+            """)
 
 else:
     st.markdown("---")
@@ -653,18 +614,19 @@ else:
 
         **2つのモード:**
         - 🟢 **今日:** TradingView API（約1秒）
-        - 🟡 **過去日付:** yfinance バックテスト（数分）
-          → 翌日〜5日後のリターンも表示
+        - 🟡 **過去日付:** yfinance バックテスト
+          → **5/10/15/20/30日後**のリターンを表示
         """)
     with c2:
         st.markdown("""
-        ### ⚡ 特徴
-        - **今日モード:** リアルタイムデータで即時取得
-        - **過去日付モード:** 過去のシグナルを検証し、
-          **翌日以降のリターン**で仮説を検証可能
+        ### ⚡ 仮説検証の流れ
+        1. 過去の日付でスクリーニング実行
+        2. 検出された銘柄の**翌日以降のリターン**を確認
+        3. 各期間の**勝率と平均リターン**をKPIで確認
+        4. 条件を調整して再検証
 
-        **📌 ヒント:** 反発度が低い（20%以下）銘柄は
-        底に近い初動段階で、リスク・リターンが高い銘柄です。
+        **📌 ヒント:** 複数の日付で検証して
+        条件の有効性を統計的に確認しましょう。
         """)
     st.markdown("---")
     st.caption("⚠️ 本ツールは投資助言を目的としたものではありません。")
