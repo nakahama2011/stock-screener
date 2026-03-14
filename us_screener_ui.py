@@ -315,20 +315,31 @@ def _fetch_tv_candidates(min_volume_val: int = DEFAULT_MIN_VOLUME) -> dict:
 @st.cache_data(ttl=3600, show_spinner=False)
 def _fetch_all_data(as_of_date_str: str, use_sample_val: bool):
     """
-    TradingView APIで候補銘柄を特定し、その候補のみ yfinance で
-    株価データを取得してキャッシュする。
+    指定日付に応じて銘柄リストを選択し、yfinanceで株価データを取得する。
+
+    - 当日/前日: TradingView APIで今の候補をプレフィルタ
+    - 過去日付: S&P 500全銘柄から取得（過去にどの銘柄が条件を満たしたか不明なため）
     """
     as_of_dt = datetime.strptime(as_of_date_str, "%Y-%m-%d")
     fetch_start = (as_of_dt - timedelta(days=HISTORY_BUFFER_DAYS)).strftime("%Y-%m-%d")
     fetch_end = (as_of_dt + timedelta(days=14)).strftime("%Y-%m-%d")
 
-    # TradingView APIで候補銘柄を事前取得（プレフィルタ）
-    tv_candidates = _fetch_tv_candidates()
+    # 当日or前営業日ならTradingView APIでプレフィルタ、それ以外はS&P 500全銘柄
+    from datetime import date as _date_cls
+    days_ago = (_date_cls.today() - as_of_dt.date()).days
+    use_tv_filter = (days_ago <= 3) and not use_sample_val
 
-    if tv_candidates and not use_sample_val:
-        tickers_data = [(sym, name) for sym, name in tv_candidates.items()]
-        total = len(tickers_data)
+    if use_tv_filter:
+        tv_candidates = _fetch_tv_candidates()
+        if tv_candidates:
+            tickers_data = [(sym, name) for sym, name in tv_candidates.items()]
+            total = len(tickers_data)
+        else:
+            tickers_df = fetch_sp500_tickers()
+            tickers_data = [(str(row["symbol"]), str(row.get("name", ""))) for _, row in tickers_df.iterrows()]
+            total = len(tickers_data)
     else:
+        # 過去日付 → S&P 500全銘柄（503銘柄）を使用
         tickers_df = _fallback_tickers() if use_sample_val else fetch_sp500_tickers()
         tickers_data = [(str(row["symbol"]), str(row.get("name", ""))) for _, row in tickers_df.iterrows()]
         total = len(tickers_data)
