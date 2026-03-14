@@ -476,22 +476,26 @@ def calc_forward_returns(
     else:
         result["next_close"] = None
 
-    # 3日以内・5日以内プラスの判定
+    # 3日以内・5日以内の最大累積リターン
     pos_within_3d = None
+    max_ret_3d = None
     if len(future_df) > 0 and base_close is not None and base_close > 0:
         days_to_check_3 = min(len(future_df), 3)
         window_3d = future_df.iloc[:days_to_check_3]
         max_close_3d = float(window_3d["Close"].max())
+        max_ret_3d = round((max_close_3d - base_close) / base_close * 100, 3)
         if max_close_3d > base_close:
             pos_within_3d = 1
         elif len(future_df) >= 3:
             pos_within_3d = 0
 
     pos_within_5d = None
+    max_ret_5d = None
     if len(future_df) > 0 and base_close is not None and base_close > 0:
         days_to_check_5 = min(len(future_df), 5)
         window_5d = future_df.iloc[:days_to_check_5]
         max_close_5d = float(window_5d["Close"].max())
+        max_ret_5d = round((max_close_5d - base_close) / base_close * 100, 3)
         if max_close_5d > base_close:
             pos_within_5d = 1
         elif len(future_df) >= 5:
@@ -499,6 +503,8 @@ def calc_forward_returns(
 
     result["pos_within_3d"] = pos_within_3d
     result["pos_within_5d"] = pos_within_5d
+    result["max_ret_3d"] = max_ret_3d
+    result["max_ret_5d"] = max_ret_5d
 
     return result
 

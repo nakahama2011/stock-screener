@@ -417,8 +417,8 @@ def run_single_day_screen(
             "4日後(%)": fwd.get("ret_4d"),
             "5日後(%)": fwd.get("ret_5d"),
             f"翌日リターン(%)": fwd.get("cum_ret_1d"),
-            "3日以内プラス": fwd.get("pos_within_3d"),
-            "5日以内プラス": fwd.get("pos_within_5d"),
+            "3日以内最大(%)": fwd.get("max_ret_3d"),
+            "5日以内最大(%)": fwd.get("max_ret_5d"),
             # ---- スコアリング用内部フィールド ----
             "_weekly_sma20_ok":       screen_result.get("weekly_sma20_ok", False),
             "_vol_today_vs_yday_pct": screen_result.get("vol_today_vs_yday_pct"),
@@ -478,8 +478,7 @@ def run_single_day_screen(
         "ティッカー", "銘柄名",
         "前々日(%)", "前日(%)", "当日(%)",
         "明日(%)", "明後日(%)", "3日後(%)", "4日後(%)", "5日後(%)",
-        hit_col_name,
-        "3日以内プラス", "5日以内プラス",
+        hit_col_name, "3日以内最大(%)", "5日以内最大(%)",
         "出来高", "出来高増減(%)",
         "出来高比(20MA)",
         "RSI(14)",
@@ -755,9 +754,9 @@ if "us_result_df" in st.session_state:
         elif "以上のみ" in show_filter:
             display_df = display_df[display_df[hit_col] >= saved_hit_thr]
         elif show_filter == "3日以内プラスのみ":
-            display_df = display_df[display_df["3日以内プラス"] == 1]
+            display_df = display_df[display_df["3日以内最大(%)"] > 0]
         elif show_filter == "5日以内プラスのみ":
-            display_df = display_df[display_df["5日以内プラス"] == 1]
+            display_df = display_df[display_df["5日以内最大(%)"] > 0]
         elif show_filter == "🏆 TOP30該当のみ":
             if "🏆TOP該当" in display_df.columns:
                 display_df = display_df[display_df["🏆TOP該当"].astype(str).str.len() > 0]
@@ -791,17 +790,17 @@ if "us_result_df" in st.session_state:
             else:
                 st.metric("明日勝率", "N/A")
         with col_k3:
-            if "3日以内プラス" in display_df.columns:
-                _col_3d = display_df["3日以内プラス"].fillna(0)
-                n_win_3d = int((_col_3d == 1).sum())
+            if "3日以内最大(%)" in display_df.columns:
+                _col_3d = display_df["3日以内最大(%)"].dropna()
+                n_win_3d = int((_col_3d > 0).sum())
                 win_rate_3d = n_win_3d / n_total * 100 if n_total > 0 else 0
                 st.metric("3日以内勝率", f"{win_rate_3d:.1f}% ({n_win_3d}/{n_total})")
             else:
                 st.metric("3日以内勝率", "N/A")
         with col_k4:
-            if "5日以内プラス" in display_df.columns:
-                _col_5d = display_df["5日以内プラス"].fillna(0)
-                n_win_5d = int((_col_5d == 1).sum())
+            if "5日以内最大(%)" in display_df.columns:
+                _col_5d = display_df["5日以内最大(%)"].dropna()
+                n_win_5d = int((_col_5d > 0).sum())
                 win_rate_5d = n_win_5d / n_total * 100 if n_total > 0 else 0
                 st.metric("5日以内勝率", f"{win_rate_5d:.1f}% ({n_win_5d}/{n_total})")
             else:
@@ -849,12 +848,15 @@ if "us_result_df" in st.session_state:
                     style = ""
                 return pct_str, style
 
-            if col in ["3日以内プラス", "5日以内プラス"]:
-                if v == 1:
-                    return "✅", "background:rgba(16,185,129,0.2);color:#10b981;font-weight:bold"
-                elif v == 0:
-                    return "✗", "background:rgba(239,68,68,0.1);color:#ef4444"
-                return "—", ""
+            if col in ["3日以内最大(%)", "5日以内最大(%)"]:
+                pct_str = f"{v:+.2f}%"
+                if v >= 2.0:
+                    return pct_str, "background:rgba(16,185,129,0.25);color:#10b981;font-weight:bold"
+                elif v > 0:
+                    return pct_str, "background:rgba(16,185,129,0.10);color:#10b981"
+                elif v < 0:
+                    return pct_str, "background:rgba(239,68,68,0.15);color:#ef4444"
+                return pct_str, ""
 
             if col == hit_col:
                 pct_str = f"{v:+.2f}%"
