@@ -431,6 +431,8 @@ def calc_forward_returns(
 ) -> Dict[str, Any]:
     """
     シグナル発生日の翌日〜5日後のリターンを計算する。
+    +2%達成判定は高値ベース（ザラ場中の指値売りを想定）。
+    最大リターンも高値ベースで計算する。
 
     Args:
         df: 当該銘柄の日足DataFrame（signal_date以降のデータを含む）
@@ -438,18 +440,22 @@ def calc_forward_returns(
         hit_threshold: 達成フラグの閾値（%）
 
     Returns:
-        各日数のリターン・達成フラグを含む辞書
+        各日数のリターン・達成フラグ・到達日数を含む辞書
     """
     past_df_for_base = df[df.index <= signal_date]
     if past_df_for_base.empty:
         return {f"ret_{n}d": None for n in FORWARD_DAYS} | \
                {f"hit_{hit_threshold:.0f}pct_{n}d": None for n in FORWARD_DAYS} | \
-               {"next_close": None, "pos_within_3d": None, "pos_within_5d": None}
+               {"next_close": None, "pos_within_3d": None, "pos_within_5d": None,
+                "max_ret_3d": None, "max_ret_5d": None,
+                "days_to_target": None, "max_high_ret_5d": None}
     base_close = float(past_df_for_base.iloc[-1]["Close"])
 
     future_df = df[df.index > signal_date].copy()
 
     result = {}
+
+    # ---- 各日の終値ベースリターン（日次変動率の参考表示用） ----
     for idx, n in enumerate(FORWARD_DAYS):
         key_ret = f"ret_{n}d"
         key_hit = f"hit_{hit_threshold:.0f}pct_{n}d"
@@ -465,8 +471,16 @@ def calc_forward_returns(
                 ret = None
             result[key_ret] = ret
             cum_ret = round((fwd_close - base_close) / base_close * 100, 3)
-            result[key_hit] = 1 if cum_ret >= hit_threshold else 0
             result[f"cum_ret_{n}d"] = cum_ret
+
+            # 高値ベースで+X%達成判定（指値売り想定）
+            window_to_n = future_df.iloc[:n]
+            if "High" in window_to_n.columns:
+                max_high_n = float(window_to_n["High"].max())
+            else:
+                max_high_n = float(window_to_n["Close"].max())
+            high_ret_n = round((max_high_n - base_close) / base_close * 100, 3)
+            result[key_hit] = 1 if high_ret_n >= hit_threshold else 0
         else:
             result[key_ret] = None
             result[key_hit] = None
@@ -476,35 +490,48 @@ def calc_forward_returns(
     else:
         result["next_close"] = None
 
-    # 3日以内・5日以内の最大累積リターン
-    pos_within_3d = None
+    # ---- 高値ベース: +X%到達日数の計算（早いほど回転率が高い） ----
+    days_to_target = None
+    target_price = base_close * (1 + hit_threshold / 100)
+    if len(future_df) > 0 and base_close is not None and base_close > 0:
+        check_days = min(len(future_df), 5)
+        for d in range(check_days):
+            day_high = float(future_df.iloc[d]["High"]) if "High" in future_df.columns else float(future_df.iloc[d]["Close"])
+            if day_high >= target_price:
+                days_to_target = d + 1  # 1日目=翌日
+                break
+    result["days_to_target"] = days_to_target
+
+    # ---- 高値ベース: 3日以内・5日以内の最大リターン ----
     max_ret_3d = None
     if len(future_df) > 0 and base_close is not None and base_close > 0:
-        days_to_check_3 = min(len(future_df), 3)
-        window_3d = future_df.iloc[:days_to_check_3]
-        max_close_3d = float(window_3d["Close"].max())
-        max_ret_3d = round((max_close_3d - base_close) / base_close * 100, 3)
-        if max_close_3d > base_close:
-            pos_within_3d = 1
-        elif len(future_df) >= 3:
-            pos_within_3d = 0
+        days_3 = min(len(future_df), 3)
+        w3 = future_df.iloc[:days_3]
+        max_high_3d = float(w3["High"].max()) if "High" in w3.columns else float(w3["Close"].max())
+        max_ret_3d = round((max_high_3d - base_close) / base_close * 100, 3)
 
-    pos_within_5d = None
     max_ret_5d = None
+    max_high_ret_5d = None
     if len(future_df) > 0 and base_close is not None and base_close > 0:
-        days_to_check_5 = min(len(future_df), 5)
-        window_5d = future_df.iloc[:days_to_check_5]
-        max_close_5d = float(window_5d["Close"].max())
-        max_ret_5d = round((max_close_5d - base_close) / base_close * 100, 3)
-        if max_close_5d > base_close:
-            pos_within_5d = 1
-        elif len(future_df) >= 5:
-            pos_within_5d = 0
+        days_5 = min(len(future_df), 5)
+        w5 = future_df.iloc[:days_5]
+        max_high_5d = float(w5["High"].max()) if "High" in w5.columns else float(w5["Close"].max())
+        max_ret_5d = round((max_high_5d - base_close) / base_close * 100, 3)
+        max_high_ret_5d = max_ret_5d  # 高値ベースの5日以内最大
+
+    # 旧互換: pos_within フラグ（特徴量分析で使用）
+    pos_within_3d = None
+    if max_ret_3d is not None:
+        pos_within_3d = 1 if max_ret_3d > 0 else (0 if len(future_df) >= 3 else None)
+    pos_within_5d = None
+    if max_ret_5d is not None:
+        pos_within_5d = 1 if max_ret_5d > 0 else (0 if len(future_df) >= 5 else None)
 
     result["pos_within_3d"] = pos_within_3d
     result["pos_within_5d"] = pos_within_5d
     result["max_ret_3d"] = max_ret_3d
     result["max_ret_5d"] = max_ret_5d
+    result["max_high_ret_5d"] = max_high_ret_5d
 
     return result
 

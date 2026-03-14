@@ -419,6 +419,7 @@ def run_single_day_screen(
             f"翌日リターン(%)": fwd.get("cum_ret_1d"),
             "3日以内最大(%)": fwd.get("max_ret_3d"),
             "5日以内最大(%)": fwd.get("max_ret_5d"),
+            "+2%到達日": fwd.get("days_to_target"),
             # ---- スコアリング用内部フィールド ----
             "_weekly_sma20_ok":       screen_result.get("weekly_sma20_ok", False),
             "_vol_today_vs_yday_pct": screen_result.get("vol_today_vs_yday_pct"),
@@ -478,7 +479,7 @@ def run_single_day_screen(
         "ティッカー", "銘柄名",
         "前々日(%)", "前日(%)", "当日(%)",
         "明日(%)", "明後日(%)", "3日後(%)", "4日後(%)", "5日後(%)",
-        hit_col_name, "3日以内最大(%)", "5日以内最大(%)",
+        hit_col_name, "3日以内最大(%)", "5日以内最大(%)", "+2%到達日",
         "出来高", "出来高増減(%)",
         "出来高比(20MA)",
         "RSI(14)",
@@ -487,7 +488,7 @@ def run_single_day_screen(
     existing = [c for c in display_cols if c in result_df.columns] + score_internal_cols
     result_df = result_df[existing]
 
-    result_df = result_df.sort_values("明日(%)", ascending=False, na_position="last")
+    result_df = result_df.sort_values("到達日", ascending=True, na_position="last") if "到達日" in result_df.columns else result_df
     return result_df, "", date_labels
 
 
@@ -570,7 +571,7 @@ if "us_result_df" in st.session_state:
         with col_f2:
             sort_col = st.selectbox(
                 "並び順",
-                ["明日（降順）", "明日（昇順）", "出来高（降順）", "ティッカー"],
+                ["回転スコア（降順）", "+2%到達日（昇順）", "明日（降順）", "明日（昇順）", "出来高（降順）", "ティッカー"],
                 key="us_sort_col",
             )
         with col_f3:
@@ -591,32 +592,46 @@ if "us_result_df" in st.session_state:
             )
             display_df = display_df[mask]
 
-        # 予測スコア計算
-        def _calc_score(row) -> int:
-            """明日プラス予測スコアを計算する。"""
+        # 回転スコア計算（+2%到達確率 × スピード評価）
+        def _calc_rotation_score(row) -> int:
+            """
+            回転売買に最適化したスコアを計算する。
+            +2%に早く到達しそうな銘柄を高評価。
+            """
             score = 0
             score += 25  # SMA順行配列
             if row.get("_weekly_sma20_ok"):
-                score += 15
+                score += 10
             try:
-                if float(row.get("出来高比(20MA)", 0)) >= 1.10:
-                    score += 20
+                vr = float(row.get("出来高比(20MA)", 0))
+                if vr >= 2.0:
+                    score += 25
+                elif vr >= 1.5:
+                    score += 15
+                elif vr >= 1.2:
+                    score += 10
             except (TypeError, ValueError):
                 pass
             try:
                 rsi = float(row.get("RSI(14)", 0))
-                if 50.0 <= rsi <= 65.0:
-                    score += 15
-            except (TypeError, ValueError):
-                pass
-            try:
-                vty = float(row.get("_vol_today_vs_yday_pct", 0))
-                if 10.0 <= vty <= 30.0:
+                if 30.0 <= rsi <= 50.0:
+                    score += 20
+                elif 50.0 < rsi <= 60.0:
                     score += 10
             except (TypeError, ValueError):
                 pass
-            if row.get("_is_pullback") or row.get("_is_breakout"):
+            if row.get("_is_pullback"):
+                score += 15
+            if row.get("_big_bearish_yesterday"):
                 score += 10
+            try:
+                day_pct = float(row.get("当日(%)", 0) or 0)
+                if day_pct < -1:
+                    score += 10
+                elif day_pct < 0:
+                    score += 5
+            except (TypeError, ValueError):
+                pass
             try:
                 dow = int(row.get("_day_of_week", -1))
                 if dow in (1, 2, 3):
@@ -625,20 +640,22 @@ if "us_result_df" in st.session_state:
                 pass
             # 減点
             try:
-                if float(row.get("RSI(14)", 0)) > 70.0:
+                if float(row.get("RSI(14)", 0)) > 62:
                     score -= 10
             except (TypeError, ValueError):
                 pass
             if row.get("_long_upper_wick"):
-                score -= 15
+                score -= 10
             if row.get("_is_high_zone"):
-                score -= 15
-            if row.get("_big_bearish_yesterday"):
-                score -= 20
-            return score
+                score -= 10
+            return max(score, 0)
 
         display_df = display_df.copy()
-        display_df["予測スコア"] = display_df.apply(_calc_score, axis=1)
+        display_df["回転スコア"] = display_df.apply(_calc_rotation_score, axis=1)
+
+        # 到達日列のリネーム（内部名と表示名を揃える）
+        if "+2%到達日" in display_df.columns:
+            display_df["到達日"] = display_df["+2%到達日"]
 
         # ---- TOP30コンボマッチング ----
         _combo_json_path = os.path.join(
@@ -713,12 +730,9 @@ if "us_result_df" in st.session_state:
 
         # フィルタ
         if show_filter == "🏆 高勝率コンボ":
-            rsi_mask = (display_df["RSI(14)"] >= 30) & (display_df["RSI(14)"] <= 65)
-            pullback_or_dip = (
-                (display_df["_is_pullback"] == True) |
-                (display_df["当日(%)"] < 0)
-            )
-            display_df = display_df[rsi_mask & pullback_or_dip]
+            rsi_mask = (display_df["RSI(14)"] >= 30) & (display_df["RSI(14)"] <= 50)
+            vol_mask = display_df["出来高比(20MA)"] >= 1.5
+            display_df = display_df[rsi_mask | vol_mask]
         elif show_filter == "🎯 RSI 30-50（割安）":
             display_df = display_df[
                 (display_df["RSI(14)"] >= 30) & (display_df["RSI(14)"] <= 50)
@@ -732,9 +746,9 @@ if "us_result_df" in st.session_state:
         elif show_filter == "📉 前日マイナス（反発期待）":
             display_df = display_df[display_df["前日(%)"] < 0]
         elif show_filter == "🔮 明日+予測（高確信）":
-            display_df = display_df[display_df["予測スコア"] >= 60]
+            display_df = display_df[display_df["回転スコア"] >= 60]
         elif show_filter == "🔮 明日+予測（候補）":
-            display_df = display_df[display_df["予測スコア"] >= 40]
+            display_df = display_df[display_df["回転スコア"] >= 40]
         elif show_filter == "📈 当日↑ 前日↓ 前々日↓":
             display_df = display_df[
                 (display_df["当日(%)"] > 0) &
@@ -765,7 +779,11 @@ if "us_result_df" in st.session_state:
                 display_df = display_df[display_df["_first_sma20_touch"] == True]
 
         # ソート
-        if sort_col == "明日（降順）":
+        if sort_col == "回転スコア（降順）":
+            display_df = display_df.sort_values("回転スコア", ascending=False, na_position="last")
+        elif sort_col == "+2%到達日（昇順）":
+            display_df = display_df.sort_values("+2%到達日", ascending=True, na_position="last")
+        elif sort_col == "明日（降順）":
             display_df = display_df.sort_values("明日(%)", ascending=False, na_position="last")
         elif sort_col == "明日（昇順）":
             display_df = display_df.sort_values("明日(%)", ascending=True, na_position="last")
@@ -790,21 +808,23 @@ if "us_result_df" in st.session_state:
             else:
                 st.metric("明日勝率", "N/A")
         with col_k3:
-            if "3日以内最大(%)" in display_df.columns:
-                _col_3d = display_df["3日以内最大(%)"].dropna()
-                n_win_3d = int((_col_3d > 0).sum())
-                win_rate_3d = n_win_3d / n_total * 100 if n_total > 0 else 0
-                st.metric("3日以内勝率", f"{win_rate_3d:.1f}% ({n_win_3d}/{n_total})")
-            else:
-                st.metric("3日以内勝率", "N/A")
-        with col_k4:
             if "5日以内最大(%)" in display_df.columns:
                 _col_5d = display_df["5日以内最大(%)"].dropna()
-                n_win_5d = int((_col_5d > 0).sum())
-                win_rate_5d = n_win_5d / n_total * 100 if n_total > 0 else 0
-                st.metric("5日以内勝率", f"{win_rate_5d:.1f}% ({n_win_5d}/{n_total})")
+                n_hit_2pct = int((_col_5d >= 2.0).sum())
+                rate_2pct = n_hit_2pct / n_total * 100 if n_total > 0 else 0
+                st.metric("+2%到達率(5日)", f"{rate_2pct:.1f}% ({n_hit_2pct}/{n_total})")
             else:
-                st.metric("5日以内勝率", "N/A")
+                st.metric("+2%到達率(5日)", "N/A")
+        with col_k4:
+            if "+2%到達日" in display_df.columns:
+                _d2t = display_df["+2%到達日"].dropna()
+                if len(_d2t) > 0:
+                    avg_days = _d2t.mean()
+                    st.metric("平均到達日数", f"{avg_days:.1f}日 ({len(_d2t)}件)")
+                else:
+                    st.metric("平均到達日数", "N/A")
+            else:
+                st.metric("平均到達日数", "N/A")
 
         # ---- 日付ラベルでカラムをリネーム ----
         date_labels = st.session_state.get("us_date_labels", {})
@@ -867,6 +887,27 @@ if "us_result_df" in st.session_state:
                 elif v < 0:
                     return pct_str, "background:rgba(239,68,68,0.15);color:#ef4444"
                 return pct_str, ""
+
+            if col in ["+2%到達日", "到達日"]:
+                d = int(v)
+                if d == 1:
+                    return f"🎯{d}日目", "background:rgba(234,179,8,0.25);color:#eab308;font-weight:bold"
+                elif d == 2:
+                    return f"✅{d}日目", "background:rgba(16,185,129,0.20);color:#10b981;font-weight:bold"
+                elif d <= 3:
+                    return f"✅{d}日目", "background:rgba(16,185,129,0.12);color:#10b981"
+                else:
+                    return f"{d}日目", "color:#94a3b8"
+
+            if col == "回転スコア":
+                s = int(v)
+                if s >= 70:
+                    return f"⭐{s}", "background:rgba(234,179,8,0.20);color:#eab308;font-weight:bold"
+                elif s >= 50:
+                    return f"{s}", "background:rgba(16,185,129,0.15);color:#10b981;font-weight:bold"
+                elif s >= 30:
+                    return f"{s}", "color:#10b981"
+                return f"{s}", "color:#94a3b8"
 
             if col == "RSI(14)":
                 s = f"{v:.1f}"
