@@ -1,0 +1,196 @@
+{
+  "n_signals": 11246,
+  "n_valid": 11246,
+  "n_dates": 61,
+  "n_tickers": 434,
+  "hit_threshold_pct": 2.0,
+  "avg_ret_1d": 0.133,
+  "win_rate_1d": 52.9,
+  "hit_rate_1d": 13.6,
+  "hit_rates_by_day": {
+    "1d": 13.6,
+    "2d": 21.7,
+    "3d": 26.3,
+    "4d": 30.4,
+    "5d": 33.3
+  },
+  "ret_stats_by_day": {
+    "ret_1d": {
+      "mean": 0.133,
+      "median": 0.108,
+      "win_rate": 52.9,
+      "max": 27.565,
+      "min": -19.605
+    },
+    "ret_2d": {
+      "mean": 0.123,
+      "median": 0.096,
+      "win_rate": 52.7,
+      "max": 27.565,
+      "min": -19.605
+    },
+    "ret_3d": {
+      "mean": 0.095,
+      "median": 0.08,
+      "win_rate": 52.4,
+      "max": 27.565,
+      "min": -21.128
+    },
+    "ret_4d": {
+      "mean": 0.074,
+      "median": 0.062,
+      "win_rate": 51.8,
+      "max": 27.565,
+      "min": -21.128
+    },
+    "ret_5d": {
+      "mean": 0.067,
+      "median": 0.054,
+      "win_rate": 51.4,
+      "max": 27.565,
+      "min": -21.128
+    }
+  },
+  "top_tickers": [
+    {
+      "ticker": "CIEN",
+      "name": "Ciena",
+      "hit_count": 24,
+      "avg_ret": 4.748,
+      "signal_count": 24
+    },
+    {
+      "ticker": "FCX",
+      "name": "Freeport-McMoRan",
+      "hit_count": 22,
+      "avg_ret": 3.269,
+      "signal_count": 22
+    },
+    {
+      "ticker": "SNDK",
+      "name": "Sandisk",
+      "hit_count": 22,
+      "avg_ret": 7.612,
+      "signal_count": 22
+    },
+    {
+      "ticker": "MU",
+      "name": "Micron Technology",
+      "hit_count": 20,
+      "avg_ret": 5.431,
+      "signal_count": 20
+    },
+    {
+      "ticker": "TER",
+      "name": "Teradyne",
+      "hit_count": 20,
+      "avg_ret": 4.56,
+      "signal_count": 20
+    },
+    {
+      "ticker": "WDC",
+      "name": "Western Digital",
+      "hit_count": 19,
+      "avg_ret": 6.771,
+      "signal_count": 19
+    },
+    {
+      "ticker": "LRCX",
+      "name": "Lam Research",
+      "hit_count": 17,
+      "avg_ret": 4.71,
+      "signal_count": 17
+    },
+    {
+      "ticker": "MRNA",
+      "name": "Moderna",
+      "hit_count": 16,
+      "avg_ret": 6.999,
+      "signal_count": 16
+    },
+    {
+      "ticker": "STX",
+      "name": "Seagate Technology",
+      "hit_count": 15,
+      "avg_ret": 5.629,
+      "signal_count": 15
+    },
+    {
+      "ticker": "ALB",
+      "name": "Albemarle Corporation",
+      "hit_count": 15,
+      "avg_ret": 4.092,
+      "signal_count": 15
+    },
+    {
+      "ticker": "LMT",
+      "name": "Lockheed Martin",
+      "hit_count": 14,
+      "avg_ret": 2.949,
+      "signal_count": 14
+    },
+    {
+      "ticker": "NEM",
+      "name": "Newmont",
+      "hit_count": 14,
+      "avg_ret": 3.79,
+      "signal_count": 14
+    },
+    {
+      "ticker": "Q",
+      "name": "Qnity Electronics",
+      "hit_count": 14,
+      "avg_ret": 4.034,
+      "signal_count": 14
+    },
+    {
+      "ticker": "GEV",
+      "name": "GE Vernova",
+      "hit_count": 14,
+      "avg_ret": 3.778,
+      "signal_count": 14
+    },
+    {
+      "ticker": "GLW",
+      "name": "Corning Inc.",
+      "hit_count": 14,
+      "avg_ret": 5.852,
+      "signal_count": 14
+    },
+    {
+      "ticker": "XOM",
+      "name": "ExxonMobil",
+      "hit_count": 14,
+      "avg_ret": 2.648,
+      "signal_count": 14
+    },
+    {
+      "ticker": "AMAT",
+      "name": "Applied Materials",
+      "hit_count": 13,
+      "avg_ret": 3.866,
+      "signal_count": 13
+    },
+    {
+      "ticker": "ODFL",
+      "name": "Old Dominion",
+      "hit_count": 13,
+      "avg_ret": 4.141,
+      "signal_count": 13
+    },
+    {
+      "ticker": "LYB",
+      "name": "LyondellBasell",
+      "hit_count": 13,
+      "avg_ret": 4.484,
+      "signal_count": 13
+    },
+    {
+      "ticker": "APA",
+      "name": "APA Corporation",
+      "hit_count": 13,
+      "avg_ret": 3.793,
+      "signal_count": 13
+    }
+  ]
+}

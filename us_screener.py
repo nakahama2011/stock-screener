@@ -2,7 +2,7 @@
 米国株スクリーナー
 
 TradingView Screener APIを使用して、日足条件
-（SMA5 > SMA20 > SMA60、出来高100万以上）で
+（SMA5 > SMA20 > SMA60、出来高100万以上、RSI 30-65、出来高比≥1.2）で
 米国株の候補銘柄を自動スクリーニングする。
 """
 
@@ -39,12 +39,15 @@ def run_screening() -> List[Dict[str, Any]]:
     条件:
       1. SMA5 > SMA20 > SMA60（順行配列）
       2. 当日出来高 >= 100万株
+      3. RSI(14) 30〜65
+      4. 出来高比(10日平均) >= 1.2
 
     Returns:
         List[Dict]: 条件合致した銘柄情報のリスト
     """
     print("🔍 TradingView Screener API で米国株スクリーニング開始...")
     print(f"   条件: SMA5 > SMA20 > SMA60 かつ 出来高 ≥ {MIN_VOLUME:,}株")
+    print(f"         RSI(14) 30〜65 かつ 出来高比(10日平均) ≥ 1.2")
     print()
 
     try:
@@ -55,6 +58,7 @@ def run_screening() -> List[Dict[str, Any]]:
                 'name', 'description', 'close', 'volume',
                 'SMA5', 'SMA20', 'SMA60',
                 'relative_volume_10d_calc',
+                'RSI',
                 'change',
                 'exchange',
             )
@@ -62,6 +66,9 @@ def run_screening() -> List[Dict[str, Any]]:
                 col('SMA5') > col('SMA20'),
                 col('SMA20') > col('SMA60'),
                 col('volume') > MIN_VOLUME,
+                col('RSI') >= 30,
+                col('RSI') <= 65,
+                col('relative_volume_10d_calc') >= 1.2,
             )
             .order_by('volume', ascending=False)
             .limit(TV_LIMIT)
@@ -146,6 +153,8 @@ def save_results(candidates: List[Dict[str, Any]]) -> str:
         "conditions": {
             "sma_alignment": "SMA5 > SMA20 > SMA60",
             "min_volume": MIN_VOLUME,
+            "rsi_range": "30-65",
+            "min_volume_ratio": 1.2,
         },
         "total_candidates": len(candidates),
         "candidates": candidates,

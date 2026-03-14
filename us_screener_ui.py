@@ -205,6 +205,8 @@ with st.sidebar:
         f"**基本条件**\n"
         f"- SMA5 > SMA20 > SMA60\n"
         f"- 出来高 ≥ {min_volume:,}株\n"
+        f"- RSI(14) 30〜65\n"
+        f"- 出来高比(20MA) ≥ 1.2倍\n"
         f"- 達成フラグ: +{hit_threshold:.1f}%以上"
     )
 
@@ -279,11 +281,15 @@ def _fetch_tv_candidates(min_volume_val: int = DEFAULT_MIN_VOLUME) -> dict:
         (count, df) = (Query()
             .set_markets('america')
             .select('name', 'description', 'close', 'volume',
-                    'SMA5', 'SMA20', 'SMA60')
+                    'SMA5', 'SMA20', 'SMA60', 'RSI',
+                    'relative_volume_10d_calc')
             .where(
                 tv_col('SMA5') > tv_col('SMA20'),
                 tv_col('SMA20') > tv_col('SMA60'),
                 tv_col('volume') > min_volume_val,
+                tv_col('RSI') >= 30,
+                tv_col('RSI') <= 65,
+                tv_col('relative_volume_10d_calc') >= 1.2,
             )
             .order_by('volume', ascending=False)
             .limit(500)
@@ -1131,7 +1137,7 @@ else:
         3. **「スクリーニング実行」ボタンを押す**
 
         結果として以下が表示されます：
-        - SMA5>SMA20>SMA60 かつ 出来高≥100万株 の米国株一覧
+        - SMA5>SMA20>SMA60 + 出来高≥100万株 + RSI 30-65 + 出来高比≥1.2 の米国株一覧
         - 明日・明後日・4日後・5日後の騰落率
         - +2%達成フラグ・分布グラフ
         """)

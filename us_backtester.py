@@ -1,7 +1,7 @@
 """
 米国株バックテストエンジン
 
-指定した期間・条件（SMA5>SMA20>SMA60, 出来高100万以上）で
+指定した期間・条件（SMA5>SMA20>SMA60, 出来高100万以上, RSI 30-65, 出来高比≥1.2）で
 米国株の過去シグナルを再現し、翌日〜5日後のリターンを検証する。
 
 使い方:
@@ -180,9 +180,11 @@ def screen_at_date(
     条件:
         1. SMA5 > SMA20 > SMA60（順行配列）
         2. 当日出来高 >= min_volume
-        3. [任意] use_pullback=True のとき
+        3. RSI(14) が 30〜65 の範囲内
+        4. 出来高比(20日平均) >= 1.2
+        5. [任意] use_pullback=True のとき
            価格 < SMA5 かつ 価格 > SMA20（5MA下・20MA上のプルバック）
-        4. [任意] near_high_pct > 0 のとき
+        6. [任意] near_high_pct > 0 のとき
            終値が直近N日高値からnear_high_pct%以内
 
     Returns:
@@ -218,6 +220,27 @@ def screen_at_date(
     if not (sma5 > sma20 > sma60 and volume >= min_volume):
         return None
 
+    # 出来高比を先に計算（基本条件で使用）
+    volume_ratio = round(volume / vol_ma20, 2) if vol_ma20 > 0 else 0
+
+    # RSI(14) を先に計算（基本条件で使用）
+    rsi_period = 14
+    rsi_val = None
+    if len(past_df) >= rsi_period + 1:
+        delta = past_df["Close"].diff()
+        gain = delta.clip(lower=0)
+        loss = (-delta).clip(lower=0)
+        avg_gain = gain.ewm(alpha=1 / rsi_period, adjust=False).mean()
+        avg_loss = loss.ewm(alpha=1 / rsi_period, adjust=False).mean()
+        rs = avg_gain.iloc[-1] / avg_loss.iloc[-1] if avg_loss.iloc[-1] != 0 else float("inf")
+        rsi_val = round(100 - 100 / (1 + rs), 1)
+
+    # 追加基本条件: RSI 30-65 + 出来高比≥1.2
+    if rsi_val is None or not (30 <= rsi_val <= 65):
+        return None
+    if volume_ratio < 1.2:
+        return None
+
     # プルバック条件（オプション）
     if use_pullback and not (close < sma5 and close > sma20):
         return None
@@ -230,8 +253,6 @@ def screen_at_date(
         distance_pct = (recent_high - close) / recent_high * 100
         if distance_pct > near_high_pct:
             return None
-
-    volume_ratio = round(volume / vol_ma20, 2) if vol_ma20 > 0 else 0
 
     # 出来高増減率を計算する
     if len(past_df) >= 3:
@@ -267,17 +288,7 @@ def screen_at_date(
     else:
         prev_prev_day_change_pct = None
 
-    # RSI(14) を計算する（Wilder の指数平滑平均方式）
-    rsi_period = 14
-    rsi_val = None
-    if len(past_df) >= rsi_period + 1:
-        delta = past_df["Close"].diff()
-        gain = delta.clip(lower=0)
-        loss = (-delta).clip(lower=0)
-        avg_gain = gain.ewm(alpha=1 / rsi_period, adjust=False).mean()
-        avg_loss = loss.ewm(alpha=1 / rsi_period, adjust=False).mean()
-        rs = avg_gain.iloc[-1] / avg_loss.iloc[-1] if avg_loss.iloc[-1] != 0 else float("inf")
-        rsi_val = round(100 - 100 / (1 + rs), 1)
+    # RSI(14) は基本条件判定で既に計算済み
 
     # ---- スコアリング用の追加指標 ----
     open_price  = float(latest["Open"])  if "Open"  in past_df.columns else close
@@ -568,7 +579,7 @@ def run_backtest(
     print(f"\n🔍 米国株バックテスト開始")
     print(f"   検証期間: {start_date} 〜 {end_date}")
     print(f"   営業日数: {len(biz_days_sorted)}日")
-    print(f"   条件: SMA5>SMA20>SMA60, 出来高≥{min_volume:,}株")
+    print(f"   条件: SMA5>SMA20>SMA60, 出来高≥{min_volume:,}株, RSI 30-65, 出来高比≥1.2")
     print()
 
     # ---- 各営業日 × 各銘柄で判定 ----
