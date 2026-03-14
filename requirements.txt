@@ -9,3 +9,5 @@ xlrd
 tradingview-screener
 lxml
 html5lib
+scikit-learn
+joblib

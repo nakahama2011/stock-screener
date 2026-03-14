@@ -419,6 +419,8 @@ def run_single_day_screen(
             "出来高比(20MA)": screen_result["volume_ratio"],
             "ATR%": screen_result.get("atr_pct"),
             "出来高増減(%)": screen_result.get("volume_change_pct"),
+            # ML予測用の内部データ
+            "_screen_result": screen_result,
             "明日(%)": fwd.get("ret_1d"),
             "明後日(%)": fwd.get("ret_2d"),
             "3日後(%)": fwd.get("ret_3d"),
@@ -488,6 +490,7 @@ def run_single_day_screen(
         "前々日(%)", "前日(%)", "当日(%)",
         "明日(%)", "明後日(%)", "3日後(%)", "4日後(%)", "5日後(%)",
         hit_col_name, "3日以内最大(%)", "5日以内最大(%)", "+2%到達日",
+        "AI予測(%)",
         "出来高", "出来高増減(%)",
         "出来高比(20MA)", "ATR%",
         "RSI(14)",
@@ -578,7 +581,7 @@ if "us_result_df" in st.session_state:
         with col_f2:
             sort_col = st.selectbox(
                 "並び順",
-                ["回転スコア（降順）", "+2%到達日（昇順）", "明日（降順）", "明日（昇順）", "出来高（降順）", "ティッカー"],
+                ["AI予測（降順）", "回転スコア（降順）", "+2%到達日（昇順）", "明日（降順）", "明日（昇順）", "出来高（降順）", "ティッカー"],
                 key="us_sort_col",
             )
         with col_f3:
@@ -659,6 +662,26 @@ if "us_result_df" in st.session_state:
 
         display_df = display_df.copy()
         display_df["回転スコア"] = display_df.apply(_calc_rotation_score, axis=1)
+
+        # ---- AI予測確率の計算 ----
+        try:
+            from us_ml_model import predict_hit_probability
+            def _predict_row(row):
+                sr = row.get("_screen_result")
+                if sr is None:
+                    return None
+                try:
+                    prob = predict_hit_probability(sr)
+                    return round(prob * 100, 1) if prob is not None else None
+                except Exception:
+                    return None
+            display_df["AI予測(%)"] = display_df.apply(_predict_row, axis=1)
+        except Exception:
+            display_df["AI予測(%)"] = None
+
+        # _screen_resultは表示に不要なので削除
+        if "_screen_result" in display_df.columns:
+            display_df = display_df.drop(columns=["_screen_result"])
 
         # 到達日列のリネーム（内部名と表示名を揃える）
         if "+2%到達日" in display_df.columns:
@@ -786,7 +809,9 @@ if "us_result_df" in st.session_state:
                 display_df = display_df[display_df["_first_sma20_touch"] == True]
 
         # ソート
-        if sort_col == "回転スコア（降順）":
+        if sort_col == "AI予測（降順）":
+            display_df = display_df.sort_values("AI予測(%)", ascending=False, na_position="last")
+        elif sort_col == "回転スコア（降順）":
             display_df = display_df.sort_values("回転スコア", ascending=False, na_position="last")
         elif sort_col == "+2%到達日（昇順）":
             display_df = display_df.sort_values("+2%到達日", ascending=True, na_position="last")
@@ -918,6 +943,18 @@ if "us_result_df" in st.session_state:
                 elif s >= 30:
                     return f"{s}", "color:#10b981"
                 return f"{s}", "color:#94a3b8"
+
+            if col == "AI予測(%)":
+                s = f"{v:.0f}%"
+                if v >= 60:
+                    return s, "background:rgba(234,179,8,0.25);color:#eab308;font-weight:bold"
+                elif v >= 50:
+                    return s, "background:rgba(16,185,129,0.20);color:#10b981;font-weight:bold"
+                elif v >= 40:
+                    return s, "color:#10b981"
+                elif v < 30:
+                    return s, "background:rgba(239,68,68,0.10);color:#ef4444"
+                return s, "color:#94a3b8"
 
             if col == "ATR%":
                 s = f"{v:.1f}%"

@@ -1,0 +1,163 @@
+{
+  "cv_scores": [
+    {
+      "fold": 1,
+      "acc": 0.5361,
+      "auc": 0.5696
+    },
+    {
+      "fold": 2,
+      "acc": 0.5176,
+      "auc": 0.5381
+    },
+    {
+      "fold": 3,
+      "acc": 0.482,
+      "auc": 0.5867
+    }
+  ],
+  "avg_auc": 0.5648,
+  "avg_acc": 0.5119,
+  "feature_importance": [
+    {
+      "name": "atr_pct",
+      "importance": 0.1454
+    },
+    {
+      "name": "rsi",
+      "importance": 0.0839
+    },
+    {
+      "name": "sma60_dist_pct",
+      "importance": 0.0805
+    },
+    {
+      "name": "vol_today_vs_yday_pct",
+      "importance": 0.0744
+    },
+    {
+      "name": "sma5_dist_pct",
+      "importance": 0.0735
+    },
+    {
+      "name": "prev_day_change_pct",
+      "importance": 0.0726
+    },
+    {
+      "name": "sma20_dist_pct",
+      "importance": 0.0723
+    },
+    {
+      "name": "prev_prev_day_change_pct",
+      "importance": 0.0682
+    },
+    {
+      "name": "volume_change_pct",
+      "importance": 0.0682
+    },
+    {
+      "name": "volume_ratio",
+      "importance": 0.0611
+    },
+    {
+      "name": "day_change_pct",
+      "importance": 0.0546
+    },
+    {
+      "name": "trend_start_days_ago",
+      "importance": 0.0501
+    },
+    {
+      "name": "day_of_week",
+      "importance": 0.0404
+    },
+    {
+      "name": "sma20_touch_count",
+      "importance": 0.0216
+    },
+    {
+      "name": "weekly_sma20_ok",
+      "importance": 0.0174
+    },
+    {
+      "name": "is_high_zone",
+      "importance": 0.0046
+    },
+    {
+      "name": "big_bearish_yesterday",
+      "importance": 0.0036
+    },
+    {
+      "name": "long_upper_wick",
+      "importance": 0.0031
+    },
+    {
+      "name": "is_pullback",
+      "importance": 0.0024
+    },
+    {
+      "name": "first_sma20_touch",
+      "importance": 0.002
+    },
+    {
+      "name": "is_breakout",
+      "importance": 0.0
+    }
+  ],
+  "probability_analysis": [
+    {
+      "range": "0-30%",
+      "count": 1412,
+      "actual_rate": 5.1
+    },
+    {
+      "range": "30-50%",
+      "count": 5326,
+      "actual_rate": 30.9
+    },
+    {
+      "range": "50-60%",
+      "count": 2721,
+      "actual_rate": 67.5
+    },
+    {
+      "range": "60-70%",
+      "count": 1190,
+      "actual_rate": 89.1
+    },
+    {
+      "range": "70-80%",
+      "count": 444,
+      "actual_rate": 97.7
+    },
+    {
+      "range": "80-101%",
+      "count": 153,
+      "actual_rate": 99.3
+    }
+  ],
+  "n_samples": 11246,
+  "feature_names": [
+    "rsi",
+    "volume_ratio",
+    "day_change_pct",
+    "prev_day_change_pct",
+    "prev_prev_day_change_pct",
+    "volume_change_pct",
+    "is_pullback",
+    "is_breakout",
+    "long_upper_wick",
+    "is_high_zone",
+    "big_bearish_yesterday",
+    "weekly_sma20_ok",
+    "first_sma20_touch",
+    "sma20_touch_count",
+    "trend_start_days_ago",
+    "day_of_week",
+    "vol_today_vs_yday_pct",
+    "atr_pct",
+    "sma5_dist_pct",
+    "sma20_dist_pct",
+    "sma60_dist_pct"
+  ]
+}
