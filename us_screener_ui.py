@@ -416,7 +416,7 @@ def run_single_day_screen(
             "3日後(%)": fwd.get("ret_3d"),
             "4日後(%)": fwd.get("ret_4d"),
             "5日後(%)": fwd.get("ret_5d"),
-            f"+{hit_threshold_val:.0f}%達成(明日)": fwd.get(f"hit_{hit_threshold_val:.0f}pct_1d"),
+            f"翌日リターン(%)": fwd.get("cum_ret_1d"),
             "3日以内プラス": fwd.get("pos_within_3d"),
             "5日以内プラス": fwd.get("pos_within_5d"),
             # ---- スコアリング用内部フィールド ----
@@ -472,7 +472,7 @@ def run_single_day_screen(
             break
 
     # 表示する列と順序
-    hit_col_name = f"+{hit_threshold_val:.0f}%達成(明日)"
+    hit_col_name = "翌日リターン(%)"
     display_cols = [
         "🏆TOP該当",
         "ティッカー", "銘柄名",
@@ -537,7 +537,7 @@ if "us_result_df" in st.session_state:
         date_label = datetime.strptime(as_of_str, "%Y-%m-%d").strftime("%Y年%m月%d日")
         st.markdown(f"## 📋 {date_label} の米国株スクリーニング結果")
 
-        hit_col = f"+{saved_hit_thr:.0f}%達成(明日)"
+        hit_col = "翌日リターン(%)"
 
         # =====================================================
         # フィルタ・ソート・検索
@@ -560,7 +560,7 @@ if "us_result_df" in st.session_state:
                     "📉 3日連続マイナス",
                     "明日プラスのみ",
                     "明日マイナスのみ",
-                    f"+{saved_hit_thr:.0f}%達成のみ",
+                    f"+{saved_hit_thr:.0f}%以上のみ",
                     "3日以内プラスのみ",
                     "5日以内プラスのみ",
                     "🏆 TOP30該当のみ",
@@ -752,8 +752,8 @@ if "us_result_df" in st.session_state:
             display_df = display_df[display_df["明日(%)"] > 0]
         elif show_filter == "明日マイナスのみ":
             display_df = display_df[display_df["明日(%)"] < 0]
-        elif "達成のみ" in show_filter:
-            display_df = display_df[display_df[hit_col] == 1]
+        elif "以上のみ" in show_filter:
+            display_df = display_df[display_df[hit_col] >= saved_hit_thr]
         elif show_filter == "3日以内プラスのみ":
             display_df = display_df[display_df["3日以内プラス"] == 1]
         elif show_filter == "5日以内プラスのみ":
@@ -849,12 +849,22 @@ if "us_result_df" in st.session_state:
                     style = ""
                 return pct_str, style
 
-            if col in [hit_col, "3日以内プラス", "5日以内プラス"]:
+            if col in ["3日以内プラス", "5日以内プラス"]:
                 if v == 1:
-                    return "✅ 達成", "background:rgba(16,185,129,0.2);color:#10b981;font-weight:bold"
+                    return "✅", "background:rgba(16,185,129,0.2);color:#10b981;font-weight:bold"
                 elif v == 0:
                     return "✗", "background:rgba(239,68,68,0.1);color:#ef4444"
                 return "—", ""
+
+            if col == hit_col:
+                pct_str = f"{v:+.2f}%"
+                if v >= saved_hit_thr:
+                    return pct_str, "background:rgba(16,185,129,0.25);color:#10b981;font-weight:bold"
+                elif v > 0:
+                    return pct_str, "background:rgba(16,185,129,0.10);color:#10b981"
+                elif v < 0:
+                    return pct_str, "background:rgba(239,68,68,0.15);color:#ef4444"
+                return pct_str, ""
 
             if col == "RSI(14)":
                 s = f"{v:.1f}"

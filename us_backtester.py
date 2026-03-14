@@ -466,6 +466,7 @@ def calc_forward_returns(
             result[key_ret] = ret
             cum_ret = round((fwd_close - base_close) / base_close * 100, 3)
             result[key_hit] = 1 if cum_ret >= hit_threshold else 0
+            result[f"cum_ret_{n}d"] = cum_ret
         else:
             result[key_ret] = None
             result[key_hit] = None
