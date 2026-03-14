@@ -505,9 +505,8 @@ if run_button:
     as_of_str = selected_date.strftime("%Y-%m-%d")
 
     with st.spinner(f"⏳ {as_of_str} の米国株データを取得・分析中..."):
-        from datetime import date as _date_cls
-        if as_of_str == _date_cls.today().strftime("%Y-%m-%d"):
-            _fetch_all_data.clear()
+        # 常にキャッシュをクリア（高値ベース+到達日数の新ロジックを確実に反映）
+        _fetch_all_data.clear()
 
         result_df, err_msg, date_labels = run_single_day_screen(
             as_of_str,
@@ -822,13 +821,16 @@ if "us_result_df" in st.session_state:
             else:
                 st.metric("+2%到達率(5日)", "N/A")
         with col_k4:
+            # +2%到達日列がある場合はそれを使用、なければ5日以内最大から推定
+            _d2t_col = None
             if "+2%到達日" in display_df.columns:
-                _d2t = display_df["+2%到達日"].dropna()
-                if len(_d2t) > 0:
-                    avg_days = _d2t.mean()
-                    st.metric("平均到達日数", f"{avg_days:.1f}日 ({len(_d2t)}件)")
-                else:
-                    st.metric("平均到達日数", "N/A")
+                _d2t_col = display_df["+2%到達日"].dropna()
+            elif "到達日" in display_df.columns:
+                _d2t_col = display_df["到達日"].dropna()
+
+            if _d2t_col is not None and len(_d2t_col) > 0:
+                avg_days = _d2t_col.mean()
+                st.metric("平均到達日数", f"{avg_days:.1f}日 ({len(_d2t_col)}件)")
             else:
                 st.metric("平均到達日数", "N/A")
 
