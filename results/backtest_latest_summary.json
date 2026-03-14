@@ -1,57 +1,198 @@
 {
-  "generated_at": "2026-02-22 01:36:16",
-  "csv_path": "/Users/nakahamahirotaka/Desktop/Antigravity/001/results/backtest_20250106_20250110_20260222_013616.csv",
-  "n_signals": 63,
-  "n_valid": 63,
-  "n_dates": 4,
-  "n_tickers": 20,
+  "generated_at": "2026-03-15 01:24:19",
+  "csv_path": "/Users/nakahamahirotaka/Desktop/Antigravity/001/results/backtest_20251201_20260307_20260315_012419.csv",
+  "n_signals": 13762,
+  "n_valid": 13762,
+  "n_dates": 64,
+  "n_tickers": 810,
   "hit_threshold_pct": 2.0,
-  "avg_ret_1d": -1.111,
-  "win_rate_1d": 15.9,
-  "hit_rate_1d": 3.2,
+  "avg_ret_1d": 0.186,
+  "win_rate_1d": 50.9,
+  "hit_rate_1d": 37.5,
   "hit_rates_by_day": {
-    "1d": 3.2,
-    "2d": 1.6,
-    "3d": 1.6,
-    "5d": 3.2
+    "1d": 37.5,
+    "2d": 51.4,
+    "3d": 59.4,
+    "4d": 64.7,
+    "5d": 68.4
   },
   "ret_stats_by_day": {
     "ret_1d": {
-      "mean": -1.111,
-      "median": -0.95,
-      "win_rate": 15.9,
-      "max": 5.125,
-      "min": -9.21
+      "mean": 0.186,
+      "median": 0.059,
+      "win_rate": 50.9,
+      "max": 92.593,
+      "min": -31.159
     },
     "ret_2d": {
-      "mean": -2.144,
-      "median": -1.726,
-      "win_rate": 7.9,
-      "max": 3.027,
-      "min": -12.428
+      "mean": 0.227,
+      "median": 0.085,
+      "win_rate": 51.3,
+      "max": 92.593,
+      "min": -31.159
     },
     "ret_3d": {
-      "mean": -2.835,
-      "median": -2.922,
-      "win_rate": 9.5,
-      "max": 6.56,
-      "min": -11.416
+      "mean": 0.246,
+      "median": 0.116,
+      "win_rate": 51.8,
+      "max": 97.561,
+      "min": -26.23
+    },
+    "ret_4d": {
+      "mean": 0.199,
+      "median": 0.088,
+      "win_rate": 51.4,
+      "max": 92.593,
+      "min": -26.23
     },
     "ret_5d": {
-      "mean": -3.297,
-      "median": -2.813,
-      "win_rate": 11.1,
-      "max": 4.444,
-      "min": -9.73
+      "mean": 0.225,
+      "median": 0.114,
+      "win_rate": 51.8,
+      "max": 92.593,
+      "min": -28.182
     }
   },
   "top_tickers": [
     {
-      "ticker": 6857,
-      "name": "アドバンテスト",
-      "hit_count": 2,
-      "avg_ret": 4.277,
-      "signal_count": 2
+      "ticker": 5713,
+      "name": "住友金属鉱山",
+      "hit_count": 41,
+      "avg_ret": 3.425,
+      "signal_count": 41
+    },
+    {
+      "ticker": 3103,
+      "name": "ユニチカ",
+      "hit_count": 39,
+      "avg_ret": 6.929,
+      "signal_count": 39
+    },
+    {
+      "ticker": 6366,
+      "name": "千代田化工建設",
+      "hit_count": 33,
+      "avg_ret": 4.475,
+      "signal_count": 33
+    },
+    {
+      "ticker": 4107,
+      "name": "伊勢化学工業",
+      "hit_count": 33,
+      "avg_ret": 3.122,
+      "signal_count": 33
+    },
+    {
+      "ticker": 4004,
+      "name": "レゾナック・ホールディングス",
+      "hit_count": 31,
+      "avg_ret": 3.091,
+      "signal_count": 31
+    },
+    {
+      "ticker": 1515,
+      "name": "日鉄鉱業",
+      "hit_count": 31,
+      "avg_ret": 2.789,
+      "signal_count": 31
+    },
+    {
+      "ticker": 5706,
+      "name": "三井金属",
+      "hit_count": 30,
+      "avg_ret": 2.728,
+      "signal_count": 30
+    },
+    {
+      "ticker": 5801,
+      "name": "古河電気工業",
+      "hit_count": 30,
+      "avg_ret": 4.666,
+      "signal_count": 30
+    },
+    {
+      "ticker": 3110,
+      "name": "日東紡績",
+      "hit_count": 30,
+      "avg_ret": 3.284,
+      "signal_count": 30
+    },
+    {
+      "ticker": 5817,
+      "name": "ＪＭＡＣＳ",
+      "hit_count": 30,
+      "avg_ret": 4.337,
+      "signal_count": 30
+    },
+    {
+      "ticker": 3997,
+      "name": "トレードワークス",
+      "hit_count": 29,
+      "avg_ret": 1.853,
+      "signal_count": 29
+    },
+    {
+      "ticker": 6590,
+      "name": "芝浦メカトロニクス",
+      "hit_count": 29,
+      "avg_ret": 2.888,
+      "signal_count": 29
+    },
+    {
+      "ticker": 5711,
+      "name": "三菱マテリアル",
+      "hit_count": 29,
+      "avg_ret": 3.294,
+      "signal_count": 29
+    },
+    {
+      "ticker": 4588,
+      "name": "オンコリスバイオファーマ",
+      "hit_count": 28,
+      "avg_ret": 5.521,
+      "signal_count": 28
+    },
+    {
+      "ticker": 6629,
+      "name": "テクノホライゾン",
+      "hit_count": 28,
+      "avg_ret": 4.165,
+      "signal_count": 28
+    },
+    {
+      "ticker": 1662,
+      "name": "石油資源開発",
+      "hit_count": 28,
+      "avg_ret": 3.131,
+      "signal_count": 28
+    },
+    {
+      "ticker": 5016,
+      "name": "ＪＸ金属",
+      "hit_count": 28,
+      "avg_ret": 2.961,
+      "signal_count": 28
+    },
+    {
+      "ticker": 5802,
+      "name": "住友電気工業",
+      "hit_count": 28,
+      "avg_ret": 3.042,
+      "signal_count": 28
+    },
+    {
+      "ticker": 6740,
+      "name": "ジャパンディスプレイ",
+      "hit_count": 27,
+      "avg_ret": 5.785,
+      "signal_count": 27
+    },
+    {
+      "ticker": 7012,
+      "name": "川崎重工業",
+      "hit_count": 26,
+      "avg_ret": 2.742,
+      "signal_count": 26
     }
   ]
 }

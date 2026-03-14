@@ -1,0 +1,117 @@
+{
+  "feature_importance": [
+    {
+      "name": "price_range_pct",
+      "importance": 0.1558
+    },
+    {
+      "name": "day_change_pct",
+      "importance": 0.0941
+    },
+    {
+      "name": "sma60_dist_pct",
+      "importance": 0.08
+    },
+    {
+      "name": "day_of_week",
+      "importance": 0.0796
+    },
+    {
+      "name": "trend_start_days_ago",
+      "importance": 0.0755
+    },
+    {
+      "name": "prev_day_change_pct",
+      "importance": 0.0716
+    },
+    {
+      "name": "rsi",
+      "importance": 0.0699
+    },
+    {
+      "name": "sma5_dist_pct",
+      "importance": 0.0614
+    },
+    {
+      "name": "prev_prev_day_change_pct",
+      "importance": 0.0608
+    },
+    {
+      "name": "sma20_dist_pct",
+      "importance": 0.0561
+    },
+    {
+      "name": "volume_ratio",
+      "importance": 0.0539
+    },
+    {
+      "name": "vol_today_vs_yday_pct",
+      "importance": 0.0475
+    },
+    {
+      "name": "volume_change_pct",
+      "importance": 0.0465
+    },
+    {
+      "name": "weekly_sma20_ok",
+      "importance": 0.0212
+    },
+    {
+      "name": "sma20_touch_count",
+      "importance": 0.0143
+    },
+    {
+      "name": "long_upper_wick",
+      "importance": 0.0035
+    },
+    {
+      "name": "first_sma20_touch",
+      "importance": 0.0031
+    },
+    {
+      "name": "big_bearish_yesterday",
+      "importance": 0.0018
+    },
+    {
+      "name": "is_high_zone",
+      "importance": 0.0017
+    },
+    {
+      "name": "is_breakout",
+      "importance": 0.0011
+    },
+    {
+      "name": "is_pullback",
+      "importance": 0.0007
+    },
+    {
+      "name": "atr_pct",
+      "importance": 0.0
+    }
+  ],
+  "feature_names": [
+    "rsi",
+    "volume_ratio",
+    "day_change_pct",
+    "prev_day_change_pct",
+    "prev_prev_day_change_pct",
+    "volume_change_pct",
+    "is_pullback",
+    "is_breakout",
+    "long_upper_wick",
+    "is_high_zone",
+    "big_bearish_yesterday",
+    "weekly_sma20_ok",
+    "first_sma20_touch",
+    "sma20_touch_count",
+    "trend_start_days_ago",
+    "day_of_week",
+    "vol_today_vs_yday_pct",
+    "atr_pct",
+    "price_range_pct",
+    "sma5_dist_pct",
+    "sma20_dist_pct",
+    "sma60_dist_pct"
+  ],
+  "n_samples": 13762
+}
