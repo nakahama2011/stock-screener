@@ -213,6 +213,7 @@ with st.sidebar:
         f"- 出来高 ≥ {min_volume:,}株\n"
         f"- RSI(14) 30〜65\n"
         f"- 出来高比(20MA) ≥ 1.2倍\n"
+        f"- ATR% ≥ 2.5%（ボラティリティ確保）\n"
         f"- 達成フラグ: +{hit_threshold:.1f}%以上"
     )
 
@@ -416,6 +417,7 @@ def run_single_day_screen(
             "SMA60": screen_result["sma60"],
             "出来高": screen_result["volume"],
             "出来高比(20MA)": screen_result["volume_ratio"],
+            "ATR%": screen_result.get("atr_pct"),
             "出来高増減(%)": screen_result.get("volume_change_pct"),
             "明日(%)": fwd.get("ret_1d"),
             "明後日(%)": fwd.get("ret_2d"),
@@ -487,7 +489,7 @@ def run_single_day_screen(
         "明日(%)", "明後日(%)", "3日後(%)", "4日後(%)", "5日後(%)",
         hit_col_name, "3日以内最大(%)", "5日以内最大(%)", "+2%到達日",
         "出来高", "出来高増減(%)",
-        "出来高比(20MA)",
+        "出来高比(20MA)", "ATR%",
         "RSI(14)",
     ]
     score_internal_cols = [c for c in result_df.columns if c.startswith("_")]
@@ -916,6 +918,14 @@ if "us_result_df" in st.session_state:
                 elif s >= 30:
                     return f"{s}", "color:#10b981"
                 return f"{s}", "color:#94a3b8"
+
+            if col == "ATR%":
+                s = f"{v:.1f}%"
+                if v >= 4.0:
+                    return s, "background:rgba(234,179,8,0.20);color:#eab308;font-weight:bold"
+                elif v >= 3.0:
+                    return s, "color:#10b981"
+                return s, "color:#94a3b8"
 
             if col == "RSI(14)":
                 s = f"{v:.1f}"

@@ -295,6 +295,22 @@ def screen_at_date(
     high_price  = float(latest["High"])  if "High"  in past_df.columns else close
     low_price   = float(latest["Low"])   if "Low"   in past_df.columns else close
 
+    # ATR(14)% 計算（ボラティリティ判定用）
+    atr_pct = None
+    if "High" in past_df.columns and "Low" in past_df.columns and len(past_df) >= 15:
+        tr = pd.concat([
+            past_df["High"] - past_df["Low"],
+            (past_df["High"] - past_df["Close"].shift(1)).abs(),
+            (past_df["Low"] - past_df["Close"].shift(1)).abs(),
+        ], axis=1).max(axis=1)
+        atr14 = tr.rolling(14).mean().iloc[-1]
+        if not pd.isna(atr14) and close > 0:
+            atr_pct = round(float(atr14) / close * 100, 2)
+
+    # 追加基本条件: ATR% >= 2.5%（+2%到達に十分なボラティリティがあるか）
+    if atr_pct is None or atr_pct < 2.5:
+        return None
+
     # 20日高値
     window20 = past_df.tail(20)
     hh20 = float(window20["High"].max()) if "High" in window20.columns else float(window20["Close"].max())
@@ -417,6 +433,7 @@ def screen_at_date(
         "first_sma20_touch":     first_sma20_touch,
         "sma20_touch_count":     sma20_touch_count,
         "trend_start_days_ago":  trend_start_days_ago,
+        "atr_pct":               atr_pct,
         "day_of_week":           day_of_week,
     }
 
