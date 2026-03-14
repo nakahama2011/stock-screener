@@ -443,6 +443,7 @@ def run_single_day_screen(
             "_sma20_touch_count":     screen_result.get("sma20_touch_count", 0),
             "_trend_days":            screen_result.get("trend_start_days_ago", 0),
             "_day_of_week":           screen_result.get("day_of_week", -1),
+            "_screen_result":         screen_result,
         })
 
     if not rows:
@@ -590,7 +591,7 @@ if "result_df" in st.session_state:
         with col_f2:
             sort_col = st.selectbox(
                 "並び順",
-                ["明日（降順）", "明日（昇順）", "出来高（降順）", "銘柄コード"],
+                ["AI予測（降順）", "明日（降順）", "明日（昇順）", "出来高（降順）", "銘柄コード"],
                 key="sort_col",
             )
         with col_f3:
@@ -686,6 +687,51 @@ if "result_df" in st.session_state:
 
         display_df = display_df.copy()
         display_df["予測スコア"] = display_df.apply(_calc_score, axis=1)
+
+        # ---- AI予測確率の計算（日本株専用モデル） ----
+        try:
+            import joblib as _jl
+            _jp_model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results", "jp_ml_model.pkl")
+            if os.path.exists(_jp_model_path):
+                _model_data = _jl.load(_jp_model_path)
+                _jp_model = _model_data["model"]
+                _jp_features = _model_data["feature_names"]
+
+                def _predict_jp(row):
+                    sr = row.get("_screen_result")
+                    if sr is None:
+                        return None
+                    try:
+                        features = {}
+                        for name in _jp_features:
+                            val = sr.get(name, 0)
+                            if isinstance(val, bool): val = int(val)
+                            try: features[name] = float(val) if val is not None else 0.0
+                            except: features[name] = 0.0
+                        close = sr.get("close", 0)
+                        if close and close > 0:
+                            for sk, fn in [("sma5","sma5_dist_pct"),("sma20","sma20_dist_pct"),("sma60","sma60_dist_pct")]:
+                                sv = sr.get(sk, 0)
+                                if sv and sv > 0 and fn in _jp_features:
+                                    features[fn] = (close - sv) / sv * 100
+                        high = sr.get("high_price", 0)
+                        low = sr.get("low_price", 0)
+                        if high and low and close and close > 0 and "price_range_pct" in _jp_features:
+                            features["price_range_pct"] = (high - low) / close * 100
+                        X = pd.DataFrame([features])[_jp_features].fillna(0)
+                        return round(float(_jp_model.predict_proba(X)[0][1]) * 100, 1)
+                    except:
+                        return None
+
+                display_df["AI予測(%)"] = display_df.apply(_predict_jp, axis=1)
+            else:
+                display_df["AI予測(%)"] = None
+        except Exception:
+            display_df["AI予測(%)"] = None
+
+        # _screen_resultは表示に不要なので削除
+        if "_screen_result" in display_df.columns:
+            display_df = display_df.drop(columns=["_screen_result"])
 
         # ---- TOP30コンボマッチング ----
         _combo_json_path = os.path.join(
@@ -819,7 +865,9 @@ if "result_df" in st.session_state:
                 display_df = display_df[display_df["_first_sma20_touch"] == True]
 
         # ソート
-        if sort_col == "明日（降順）":
+        if sort_col == "AI予測（降順）" and "AI予測(%)" in display_df.columns:
+            display_df = display_df.sort_values("AI予測(%)", ascending=False, na_position="last")
+        elif sort_col == "明日（降順）":
             display_df = display_df.sort_values("明日(%)", ascending=False, na_position="last")
         elif sort_col == "明日（昇順）":
             display_df = display_df.sort_values("明日(%)", ascending=True, na_position="last")
@@ -942,12 +990,30 @@ if "result_df" in st.session_state:
             if col == "出来高比(20MA)":
                 return f"{v:.2f}", ""
 
+            if col == "AI予測(%)":
+                s = f"{v:.0f}%"
+                if v >= 80:
+                    return s, "background:rgba(234,179,8,0.30);color:#eab308;font-weight:bold"
+                elif v >= 70:
+                    return s, "background:rgba(234,179,8,0.20);color:#eab308;font-weight:bold"
+                elif v >= 60:
+                    return s, "background:rgba(16,185,129,0.20);color:#10b981;font-weight:bold"
+                elif v >= 50:
+                    return s, "color:#10b981"
+                elif v < 30:
+                    return s, "background:rgba(239,68,68,0.10);color:#ef4444"
+                return s, "color:#94a3b8"
+
             return str(val), ""
 
         # ---- カスタムHTMLテーブルを生成する ----
         # 表示列（銘柄コード・銘柄名・予測スコアは固定、残りを順番どおりに。内部変数_付きは除外）
-        skip_cols = {"銘柄コード", "銘柄名", "予測スコア"}
-        other_cols = [c for c in display_df.columns if c not in skip_cols and not c.startswith("_")]
+        skip_cols = {"銘柄コード", "銘柄名", "予測スコア", "AI予測(%)"}
+        # AI予測を先頭近くに固定表示
+        priority_cols = []
+        if "AI予測(%)" in display_df.columns:
+            priority_cols.append("AI予測(%)")
+        other_cols = priority_cols + [c for c in display_df.columns if c not in skip_cols and not c.startswith("_") and c not in priority_cols]
 
         # ヘッダー
         th_cells = "<th>銘柄コード</th><th>銘柄名</th>"
