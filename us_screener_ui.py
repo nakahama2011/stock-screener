@@ -89,7 +89,13 @@ st.markdown("""
     background: #1a2332;
     border: 1px solid #2a3a4e;
     border-radius: 10px;
-    padding: 1rem !important;
+    padding: 0.6rem 0.8rem !important;
+  }
+  [data-testid="metric-container"] [data-testid="stMetricValue"] {
+    font-size: 1.4rem !important;
+  }
+  [data-testid="metric-container"] [data-testid="stMetricLabel"] {
+    font-size: 0.75rem !important;
   }
   .app-header {
     background: linear-gradient(135deg, rgba(239,68,68,0.12), rgba(59,130,246,0.15));
