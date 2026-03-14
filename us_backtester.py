@@ -307,9 +307,10 @@ def screen_at_date(
         if not pd.isna(atr14) and close > 0:
             atr_pct = round(float(atr14) / close * 100, 2)
 
-    # 追加基本条件: ATR% >= 2.5%（+2%到達に十分なボラティリティがあるか）
-    if atr_pct is None or atr_pct < 2.5:
-        return None
+    # バックテスト時はATRフィルターを外す（学習データの多様性確保のため）
+    # ライブスクリーニング時のみus_screener_ui.pyで適用
+    # if atr_pct is None or atr_pct < 2.5:
+    #     return None
 
     # 20日高値
     window20 = past_df.tail(20)

@@ -1,0 +1,196 @@
+{
+  "n_signals": 775,
+  "n_valid": 775,
+  "n_dates": 60,
+  "n_tickers": 245,
+  "hit_threshold_pct": 2.0,
+  "avg_ret_1d": 0.431,
+  "win_rate_1d": 57.8,
+  "hit_rate_1d": 43.6,
+  "hit_rates_by_day": {
+    "1d": 43.6,
+    "2d": 57.7,
+    "3d": 66.1,
+    "4d": 71.5,
+    "5d": 74.1
+  },
+  "ret_stats_by_day": {
+    "ret_1d": {
+      "mean": 0.431,
+      "median": 0.526,
+      "win_rate": 57.8,
+      "max": 18.649,
+      "min": -19.605
+    },
+    "ret_2d": {
+      "mean": 0.361,
+      "median": 0.225,
+      "win_rate": 53.7,
+      "max": 13.405,
+      "min": -19.605
+    },
+    "ret_3d": {
+      "mean": 0.169,
+      "median": 0.235,
+      "win_rate": 55.9,
+      "max": 15.577,
+      "min": -21.128
+    },
+    "ret_4d": {
+      "mean": 0.041,
+      "median": 0.037,
+      "win_rate": 50.6,
+      "max": 12.145,
+      "min": -21.128
+    },
+    "ret_5d": {
+      "mean": 0.048,
+      "median": 0.044,
+      "win_rate": 51.4,
+      "max": 18.698,
+      "min": -21.128
+    }
+  },
+  "top_tickers": [
+    {
+      "ticker": "WDC",
+      "name": "Western Digital",
+      "hit_count": 6,
+      "avg_ret": 5.035,
+      "signal_count": 6
+    },
+    {
+      "ticker": "CIEN",
+      "name": "Ciena",
+      "hit_count": 6,
+      "avg_ret": 3.516,
+      "signal_count": 6
+    },
+    {
+      "ticker": "AKAM",
+      "name": "Akamai Technologies",
+      "hit_count": 6,
+      "avg_ret": 3.091,
+      "signal_count": 6
+    },
+    {
+      "ticker": "JBL",
+      "name": "Jabil",
+      "hit_count": 6,
+      "avg_ret": 2.275,
+      "signal_count": 6
+    },
+    {
+      "ticker": "IP",
+      "name": "International Paper",
+      "hit_count": 5,
+      "avg_ret": 1.295,
+      "signal_count": 5
+    },
+    {
+      "ticker": "IVZ",
+      "name": "Invesco",
+      "hit_count": 5,
+      "avg_ret": 0.18,
+      "signal_count": 5
+    },
+    {
+      "ticker": "AMCR",
+      "name": "Amcor",
+      "hit_count": 5,
+      "avg_ret": 3.46,
+      "signal_count": 5
+    },
+    {
+      "ticker": "CAT",
+      "name": "Caterpillar Inc.",
+      "hit_count": 4,
+      "avg_ret": 2.791,
+      "signal_count": 4
+    },
+    {
+      "ticker": "COP",
+      "name": "ConocoPhillips",
+      "hit_count": 4,
+      "avg_ret": 2.204,
+      "signal_count": 4
+    },
+    {
+      "ticker": "TXN",
+      "name": "Texas Instruments",
+      "hit_count": 4,
+      "avg_ret": 1.312,
+      "signal_count": 4
+    },
+    {
+      "ticker": "ON",
+      "name": "ON Semiconductor",
+      "hit_count": 4,
+      "avg_ret": 3.191,
+      "signal_count": 4
+    },
+    {
+      "ticker": "HAL",
+      "name": "Halliburton",
+      "hit_count": 4,
+      "avg_ret": 3.416,
+      "signal_count": 4
+    },
+    {
+      "ticker": "GLW",
+      "name": "Corning Inc.",
+      "hit_count": 4,
+      "avg_ret": 1.323,
+      "signal_count": 4
+    },
+    {
+      "ticker": "GEV",
+      "name": "GE Vernova",
+      "hit_count": 4,
+      "avg_ret": 2.046,
+      "signal_count": 4
+    },
+    {
+      "ticker": "BAX",
+      "name": "Baxter International",
+      "hit_count": 4,
+      "avg_ret": 3.525,
+      "signal_count": 4
+    },
+    {
+      "ticker": "NOC",
+      "name": "Northrop Grumman",
+      "hit_count": 4,
+      "avg_ret": 2.96,
+      "signal_count": 4
+    },
+    {
+      "ticker": "DOW",
+      "name": "Dow Inc.",
+      "hit_count": 4,
+      "avg_ret": 2.592,
+      "signal_count": 4
+    },
+    {
+      "ticker": "LRCX",
+      "name": "Lam Research",
+      "hit_count": 4,
+      "avg_ret": 2.436,
+      "signal_count": 4
+    },
+    {
+      "ticker": "MCHP",
+      "name": "Microchip Technology",
+      "hit_count": 4,
+      "avg_ret": 1.692,
+      "signal_count": 4
+    },
+    {
+      "ticker": "APA",
+      "name": "APA Corporation",
+      "hit_count": 4,
+      "avg_ret": 2.616,
+      "signal_count": 4
+    }
+  ]
+}
