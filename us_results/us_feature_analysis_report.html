@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🇺🇸 米国株 特徴量分析レポート</title>
+<style>
+    :root {
+        --bg: #0f172a;
+        --card-bg: #1e293b;
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+        --accent: #38bdf8;
+        --green: #10b981;
+        --red: #ef4444;
+        --border: #334155;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: 'Segoe UI', 'Hiragino Sans', sans-serif;
+        line-height: 1.6;
+        padding: 2rem;
+    }
+    h1 {
+        text-align: center;
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+        color: var(--accent);
+    }
+    .subtitle {
+        text-align: center;
+        color: var(--muted);
+        margin-bottom: 2rem;
+    }
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    .kpi {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+    .kpi .label { color: var(--muted); font-size: 0.85rem; }
+    .kpi .value { font-size: 2rem; font-weight: bold; color: var(--accent); margin-top: 4px; }
+    .card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .card h3 {
+        color: var(--accent);
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+    th {
+        background: #0f172a;
+        color: var(--muted);
+        text-align: left;
+        padding: 8px 12px;
+        border-bottom: 2px solid var(--border);
+        font-weight: 600;
+    }
+    td {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--border);
+    }
+    tr:hover {
+        background: rgba(56, 189, 248, 0.05);
+    }
+    .section-title {
+        font-size: 1.3rem;
+        color: var(--accent);
+        margin: 2rem 0 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--border);
+    }
+    .note {
+        color: var(--muted);
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+    }
+</style>
+</head>
+<body>
+
+<h1>🇺🇸 米国株 特徴量分析レポート</h1>
+<p class="subtitle">2025-12-07 〜 2026-03-07 ・ 1236シグナル</p>
+
+<div class="kpi-grid">
+    <div class="kpi">
+        <div class="label">分析シグナル数</div>
+        <div class="value">1,236</div>
+    </div>
+    <div class="kpi">
+        <div class="label">全体 5日以内勝率</div>
+        <div class="value" style="color:var(--green)">75.6%</div>
+    </div>
+    <div class="kpi">
+        <div class="label">全体 3日以内勝率</div>
+        <div class="value" style="color:var(--green)">68.5%</div>
+    </div>
+</div>
+
+<h2 class="section-title">📈 特徴量ごとの5日以内勝率</h2>
+<p class="note">※ 各特徴量の範囲別に勝率を集計し、全体勝率との差を表示しています。</p>
+
+        <div class="card">
+            <h3>📊 RSI(14)</h3>
+            <table>
+                <thead><tr>
+                    <th>範囲</th><th>件数</th><th>5日以内勝率</th><th>全体比</th><th>分布</th>
+                </tr></thead>
+                <tbody>
+            <tr>
+                <td>30-50</td>
+                <td style="text-align:right">75</td>
+                <td style="text-align:right;font-weight:bold">73.3%</td>
+                <td style="text-align:right"><span style="color:#ef4444;font-weight:bold">-2.3%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#ef4444;height:100%;width:73.3%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>50-65（適正）</td>
+                <td style="text-align:right">657</td>
+                <td style="text-align:right;font-weight:bold">74.3%</td>
+                <td style="text-align:right"><span style="color:#ef4444;font-weight:bold">-1.3%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#ef4444;height:100%;width:74.3%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>65-80</td>
+                <td style="text-align:right">476</td>
+                <td style="text-align:right;font-weight:bold">77.1%</td>
+                <td style="text-align:right"><span style="color:#10b981;font-weight:bold">+1.5%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#10b981;height:100%;width:77.1%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>80-100（買われすぎ）</td>
+                <td style="text-align:right">27</td>
+                <td style="text-align:right;font-weight:bold">85.2%</td>
+                <td style="text-align:right"><span style="color:#10b981;font-weight:bold">+9.6%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#10b981;height:100%;width:85.2%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr></tbody>
+            </table>
+        </div>
+        <div class="card">
+            <h3>📊 出来高比(20MA)</h3>
+            <table>
+                <thead><tr>
+                    <th>範囲</th><th>件数</th><th>5日以内勝率</th><th>全体比</th><th>分布</th>
+                </tr></thead>
+                <tbody>
+            <tr>
+                <td>〜0.8倍</td>
+                <td style="text-align:right">360</td>
+                <td style="text-align:right;font-weight:bold">73.3%</td>
+                <td style="text-align:right"><span style="color:#ef4444;font-weight:bold">-2.3%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#ef4444;height:100%;width:73.3%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>0.8〜1.0倍</td>
+                <td style="text-align:right">330</td>
+                <td style="text-align:right;font-weight:bold">76.1%</td>
+                <td style="text-align:right"><span style="color:#10b981;font-weight:bold">+0.5%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#10b981;height:100%;width:76.1%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>1.0〜1.2倍</td>
+                <td style="text-align:right">243</td>
+                <td style="text-align:right;font-weight:bold">81.9%</td>
+                <td style="text-align:right"><span style="color:#10b981;font-weight:bold">+6.3%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#10b981;height:100%;width:81.9%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>1.2〜1.5倍</td>
+                <td style="text-align:right">177</td>
+                <td style="text-align:right;font-weight:bold">75.1%</td>
+                <td style="text-align:right"><span style="color:#ef4444;font-weight:bold">-0.5%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#ef4444;height:100%;width:75.1%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>1.5〜2.0倍</td>
+                <td style="text-align:right">86</td>
+                <td style="text-align:right;font-weight:bold">70.9%</td>
+                <td style="text-align:right"><span style="color:#ef4444;font-weight:bold">-4.7%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#ef4444;height:100%;width:70.9%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>2.0倍〜</td>
+                <td style="text-align:right">40</td>
+                <td style="text-align:right;font-weight:bold">65.0%</td>
+                <td style="text-align:right"><span style="color:#ef4444;font-weight:bold">-10.6%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#ef4444;height:100%;width:65.0%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr></tbody>
+            </table>
+        </div>
+        <div class="card">
+            <h3>📊 当日騰落率(%)</h3>
+            <table>
+                <thead><tr>
+                    <th>範囲</th><th>件数</th><th>5日以内勝率</th><th>全体比</th><th>分布</th>
+                </tr></thead>
+                <tbody>
+            <tr>
+                <td>〜-3%</td>
+                <td style="text-align:right">56</td>
+                <td style="text-align:right;font-weight:bold">82.1%</td>
+                <td style="text-align:right"><span style="color:#10b981;font-weight:bold">+6.5%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#10b981;height:100%;width:82.1%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>-3%〜-1%</td>
+                <td style="text-align:right">229</td>
+                <td style="text-align:right;font-weight:bold">73.4%</td>
+                <td style="text-align:right"><span style="color:#ef4444;font-weight:bold">-2.2%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#ef4444;height:100%;width:73.4%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>-1%〜0%</td>
+                <td style="text-align:right">305</td>
+                <td style="text-align:right;font-weight:bold">73.8%</td>
+                <td style="text-align:right"><span style="color:#ef4444;font-weight:bold">-1.8%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#ef4444;height:100%;width:73.8%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>0%〜+1%</td>
+                <td style="text-align:right">311</td>
+                <td style="text-align:right;font-weight:bold">75.2%</td>
+                <td style="text-align:right"><span style="color:#ef4444;font-weight:bold">-0.4%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#ef4444;height:100%;width:75.2%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>+1%〜+3%</td>
+                <td style="text-align:right">267</td>
+                <td style="text-align:right;font-weight:bold">79.4%</td>
+                <td style="text-align:right"><span style="color:#10b981;font-weight:bold">+3.8%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#10b981;height:100%;width:79.4%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>+3%〜</td>
+                <td style="text-align:right">68</td>
+                <td style="text-align:right;font-weight:bold">72.1%</td>
+                <td style="text-align:right"><span style="color:#ef4444;font-weight:bold">-3.5%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#ef4444;height:100%;width:72.1%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr></tbody>
+            </table>
+        </div>
+        <div class="card">
+            <h3>📊 前日騰落率(%)</h3>
+            <table>
+                <thead><tr>
+                    <th>範囲</th><th>件数</th><th>5日以内勝率</th><th>全体比</th><th>分布</th>
+                </tr></thead>
+                <tbody>
+            <tr>
+                <td>〜-3%</td>
+                <td style="text-align:right">43</td>
+                <td style="text-align:right;font-weight:bold">72.1%</td>
+                <td style="text-align:right"><span style="color:#ef4444;font-weight:bold">-3.5%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#ef4444;height:100%;width:72.1%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>-3%〜-1%</td>
+                <td style="text-align:right">218</td>
+                <td style="text-align:right;font-weight:bold">73.4%</td>
+                <td style="text-align:right"><span style="color:#ef4444;font-weight:bold">-2.2%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#ef4444;height:100%;width:73.4%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>-1%〜0%</td>
+                <td style="text-align:right">301</td>
+                <td style="text-align:right;font-weight:bold">78.7%</td>
+                <td style="text-align:right"><span style="color:#10b981;font-weight:bold">+3.1%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#10b981;height:100%;width:78.7%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>0%〜+1%</td>
+                <td style="text-align:right">319</td>
+                <td style="text-align:right;font-weight:bold">76.5%</td>
+                <td style="text-align:right"><span style="color:#10b981;font-weight:bold">+0.9%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#10b981;height:100%;width:76.5%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>+1%〜+3%</td>
+                <td style="text-align:right">282</td>
+                <td style="text-align:right;font-weight:bold">75.9%</td>
+                <td style="text-align:right"><span style="color:#10b981;font-weight:bold">+0.3%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#10b981;height:100%;width:75.9%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>+3%〜</td>
+                <td style="text-align:right">73</td>
+                <td style="text-align:right;font-weight:bold">65.8%</td>
+                <td style="text-align:right"><span style="color:#ef4444;font-weight:bold">-9.8%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#ef4444;height:100%;width:65.8%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr></tbody>
+            </table>
+        </div>
+        <div class="card">
+            <h3>📊 当日出来高/前日比(%)</h3>
+            <table>
+                <thead><tr>
+                    <th>範囲</th><th>件数</th><th>5日以内勝率</th><th>全体比</th><th>分布</th>
+                </tr></thead>
+                <tbody>
+            <tr>
+                <td>〜-20%</td>
+                <td style="text-align:right">272</td>
+                <td style="text-align:right;font-weight:bold">72.4%</td>
+                <td style="text-align:right"><span style="color:#ef4444;font-weight:bold">-3.2%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#ef4444;height:100%;width:72.4%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>-20%〜0%</td>
+                <td style="text-align:right">325</td>
+                <td style="text-align:right;font-weight:bold">76.3%</td>
+                <td style="text-align:right"><span style="color:#10b981;font-weight:bold">+0.7%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#10b981;height:100%;width:76.3%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>0%〜+10%</td>
+                <td style="text-align:right">161</td>
+                <td style="text-align:right;font-weight:bold">79.5%</td>
+                <td style="text-align:right"><span style="color:#10b981;font-weight:bold">+3.9%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#10b981;height:100%;width:79.5%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>+10%〜+30%</td>
+                <td style="text-align:right">211</td>
+                <td style="text-align:right;font-weight:bold">78.7%</td>
+                <td style="text-align:right"><span style="color:#10b981;font-weight:bold">+3.1%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#10b981;height:100%;width:78.7%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>+30%〜+50%</td>
+                <td style="text-align:right">129</td>
+                <td style="text-align:right;font-weight:bold">73.6%</td>
+                <td style="text-align:right"><span style="color:#ef4444;font-weight:bold">-2.0%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#ef4444;height:100%;width:73.6%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>+50%〜</td>
+                <td style="text-align:right">138</td>
+                <td style="text-align:right;font-weight:bold">72.5%</td>
+                <td style="text-align:right"><span style="color:#ef4444;font-weight:bold">-3.1%</span></td>
+                <td>
+                    <div style="background:#1f2937;border-radius:4px;height:20px;width:200px;position:relative">
+                        <div style="background:#ef4444;height:100%;width:72.5%;border-radius:4px;opacity:0.8"></div>
+                    </div>
+                </td>
+            </tr></tbody>
+            </table>
+        </div>
+
+<h2 class="section-title">🏷️ フラグ型条件</h2>
+<div class="card">
+    <table>
+        <thead><tr>
+            <th>条件</th><th>状態</th><th>件数</th><th>5日以内勝率</th><th>全体比</th>
+        </tr></thead>
+        <tbody>
+            <tr>
+                <td>押し目(プルバック)</td>
+                <td>あり</td>
+                <td style="text-align:right">384</td>
+                <td style="text-align:right;font-weight:bold">76.3%</td>
+                <td style="text-align:right"><span style="color:#10b981;font-weight:bold">+0.7%</span></td>
+            </tr>
+            <tr>
+                <td>押し目(プルバック)</td>
+                <td>なし</td>
+                <td style="text-align:right">852</td>
+                <td style="text-align:right;font-weight:bold">75.2%</td>
+                <td style="text-align:right"><span style="color:#ef4444;font-weight:bold">-0.4%</span></td>
+            </tr>
+            <tr>
+                <td>20日高値ブレイク</td>
+                <td>なし</td>
+                <td style="text-align:right">1236</td>
+                <td style="text-align:right;font-weight:bold">75.6%</td>
+                <td style="text-align:right"><span style="color:#10b981;font-weight:bold">+0.0%</span></td>
+            </tr>
+            <tr>
+                <td>長大上ヒゲ</td>
+                <td>あり</td>
+                <td style="text-align:right">137</td>
+                <td style="text-align:right;font-weight:bold">73.7%</td>
+                <td style="text-align:right"><span style="color:#ef4444;font-weight:bold">-1.9%</span></td>
+            </tr>
+            <tr>
+                <td>長大上ヒゲ</td>
+                <td>なし</td>
+                <td style="text-align:right">1099</td>
+                <td style="text-align:right;font-weight:bold">75.8%</td>
+                <td style="text-align:right"><span style="color:#10b981;font-weight:bold">+0.2%</span></td>
+            </tr>
+            <tr>
+                <td>高値圏(20日HH 3%以内)</td>
+                <td>あり</td>
+                <td style="text-align:right">762</td>
+                <td style="text-align:right;font-weight:bold">75.5%</td>
+                <td style="text-align:right"><span style="color:#ef4444;font-weight:bold">-0.1%</span></td>
+            </tr>
+            <tr>
+                <td>高値圏(20日HH 3%以内)</td>
+                <td>なし</td>
+                <td style="text-align:right">474</td>
+                <td style="text-align:right;font-weight:bold">75.7%</td>
+                <td style="text-align:right"><span style="color:#10b981;font-weight:bold">+0.1%</span></td>
+            </tr>
+            <tr>
+                <td>前日大陰線</td>
+                <td>あり</td>
+                <td style="text-align:right">82</td>
+                <td style="text-align:right;font-weight:bold">75.6%</td>
+                <td style="text-align:right"><span style="color:#10b981;font-weight:bold">+0.0%</span></td>
+            </tr>
+            <tr>
+                <td>前日大陰線</td>
+                <td>なし</td>
+                <td style="text-align:right">1154</td>
+                <td style="text-align:right;font-weight:bold">75.6%</td>
+                <td style="text-align:right"><span style="color:#10b981;font-weight:bold">+0.0%</span></td>
+            </tr>
+            <tr>
+                <td>週足SMA20上抜け</td>
+                <td>あり</td>
+                <td style="text-align:right">893</td>
+                <td style="text-align:right;font-weight:bold">76.6%</td>
+                <td style="text-align:right"><span style="color:#10b981;font-weight:bold">+1.0%</span></td>
+            </tr>
+            <tr>
+                <td>週足SMA20上抜け</td>
+                <td>なし</td>
+                <td style="text-align:right">343</td>
+                <td style="text-align:right;font-weight:bold">72.9%</td>
+                <td style="text-align:right"><span style="color:#ef4444;font-weight:bold">-2.7%</span></td>
+            </tr></tbody>
+    </table>
+</div>
+
+<h2 class="section-title">📅 曜日別の勝率</h2>
+<div class="card">
+    <table>
+        <thead><tr>
+            <th>曜日</th><th>件数</th><th>5日以内勝率</th><th>全体比</th>
+        </tr></thead>
+        <tbody>
+        <tr>
+            <td>月曜(Mon)</td>
+            <td style="text-align:right">234</td>
+            <td style="text-align:right;font-weight:bold">73.5%</td>
+            <td style="text-align:right"><span style="color:#ef4444;font-weight:bold">-2.1%</span></td>
+        </tr>
+        <tr>
+            <td>火曜(Tue)</td>
+            <td style="text-align:right">271</td>
+            <td style="text-align:right;font-weight:bold">81.2%</td>
+            <td style="text-align:right"><span style="color:#10b981;font-weight:bold">+5.6%</span></td>
+        </tr>
+        <tr>
+            <td>水曜(Wed)</td>
+            <td style="text-align:right">257</td>
+            <td style="text-align:right;font-weight:bold">75.5%</td>
+            <td style="text-align:right"><span style="color:#ef4444;font-weight:bold">-0.1%</span></td>
+        </tr>
+        <tr>
+            <td>木曜(Thu)</td>
+            <td style="text-align:right">222</td>
+            <td style="text-align:right;font-weight:bold">74.8%</td>
+            <td style="text-align:right"><span style="color:#ef4444;font-weight:bold">-0.8%</span></td>
+        </tr>
+        <tr>
+            <td>金曜(Fri)</td>
+            <td style="text-align:right">252</td>
+            <td style="text-align:right;font-weight:bold">72.2%</td>
+            <td style="text-align:right"><span style="color:#ef4444;font-weight:bold">-3.4%</span></td>
+        </tr></tbody>
+    </table>
+</div>
+
+<h2 class="section-title">🏆 5日以内プラス 最強の条件組み合わせ TOP30</h2>
+<p class="note">※ 2〜3条件のあらゆる組み合わせを調査し、サンプル数10件以上で勝率が高い順に表示しています。</p>
+<div class="card">
+    <table>
+        <thead><tr>
+            <th style="width:40px">順位</th><th>条件の組み合わせ</th><th>件数</th><th>5日以内勝率</th>
+        </tr></thead>
+        <tbody>
+        <tr>
+            <td style="text-align:center">🥇</td>
+            <td>出来高比≥1.5 + 押し目(プルバック) + 火〜木曜</td>
+            <td style="text-align:right">17</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">94.1%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">🥈</td>
+            <td>出来高比≥1.5 + 押し目(プルバック) + 週足SMA20上抜け</td>
+            <td style="text-align:right">19</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">89.5%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">🥉</td>
+            <td>出来高比≥1.2 + 押し目(プルバック) + 火〜木曜</td>
+            <td style="text-align:right">46</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">89.1%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">4</td>
+            <td>当日陰線 + 長大上ヒゲ + 火〜木曜</td>
+            <td style="text-align:right">42</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">88.1%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">5</td>
+            <td>RSI 30-50 + 出来高比≥1.2 + 火〜木曜</td>
+            <td style="text-align:right">16</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">87.5%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">6</td>
+            <td>出来高比≥1.2 + 当日陰線 + 長大上ヒゲ</td>
+            <td style="text-align:right">14</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">85.7%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">7</td>
+            <td>当日陰線 + 前日陰線 + 長大上ヒゲ</td>
+            <td style="text-align:right">26</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">84.6%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">8</td>
+            <td>当日陰線 + 長大上ヒゲ + 週足SMA20上抜け</td>
+            <td style="text-align:right">51</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">84.3%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">9</td>
+            <td>出来高比≥1.2 + 押し目(プルバック) + 週足SMA20上抜け</td>
+            <td style="text-align:right">55</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">83.6%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">10</td>
+            <td>出来高比≥1.2 + 当日陰線 + 火〜木曜</td>
+            <td style="text-align:right">90</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">83.3%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">11</td>
+            <td>RSI 30-50 + 前日大陰線</td>
+            <td style="text-align:right">12</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">83.3%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">12</td>
+            <td>RSI 30-50 + 前日陰線 + 前日大陰線</td>
+            <td style="text-align:right">12</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">83.3%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">13</td>
+            <td>出来高比≥1.5 + 前日陽線 + 押し目(プルバック)</td>
+            <td style="text-align:right">12</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">83.3%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">14</td>
+            <td>RSI 50-65 + 長大上ヒゲ + 火〜木曜</td>
+            <td style="text-align:right">47</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">83.0%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">15</td>
+            <td>当日陰線 + 押し目(プルバック) + 長大上ヒゲ</td>
+            <td style="text-align:right">29</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">82.8%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">16</td>
+            <td>押し目(プルバック) + 長大上ヒゲ + 火〜木曜</td>
+            <td style="text-align:right">29</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">82.8%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">17</td>
+            <td>RSI 30-50 + 週足SMA20上抜け</td>
+            <td style="text-align:right">34</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">82.4%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">18</td>
+            <td>出来高比≥1.5 + 当日陰線 + 火〜木曜</td>
+            <td style="text-align:right">34</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">82.4%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">19</td>
+            <td>前日陰線 + 押し目(プルバック) + 火〜木曜</td>
+            <td style="text-align:right">162</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">82.1%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">20</td>
+            <td>当日陽線 + 押し目(プルバック) + 前日大陰線</td>
+            <td style="text-align:right">22</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">81.8%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">21</td>
+            <td>出来高比≥1.2 + 前日陰線 + 押し目(プルバック)</td>
+            <td style="text-align:right">38</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">81.6%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">22</td>
+            <td>RSI 30-50 + 当日陰線 + 週足SMA20上抜け</td>
+            <td style="text-align:right">32</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">81.2%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">23</td>
+            <td>前日陰線 + 長大上ヒゲ + 週足SMA20上抜け</td>
+            <td style="text-align:right">32</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">81.2%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">24</td>
+            <td>当日陰線 + 前日陰線 + 押し目(プルバック)</td>
+            <td style="text-align:right">163</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">81.0%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">25</td>
+            <td>出来高比≥1.2 + 前日陰線 + 火〜木曜</td>
+            <td style="text-align:right">79</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">81.0%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">26</td>
+            <td>RSI 30-50 + 週足SMA20上抜け + 火〜木曜</td>
+            <td style="text-align:right">21</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">81.0%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">27</td>
+            <td>当日陰線 + 前日陰線 + 火〜木曜</td>
+            <td style="text-align:right">183</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">80.9%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">28</td>
+            <td>当日陰線 + 押し目(プルバック) + 火〜木曜</td>
+            <td style="text-align:right">192</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">80.7%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">29</td>
+            <td>前日陰線 + 押し目(プルバック) + 週足SMA20上抜け</td>
+            <td style="text-align:right">161</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">80.7%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">30</td>
+            <td>当日陰線 + 長大上ヒゲ</td>
+            <td style="text-align:right">67</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">80.6%</td>
+        </tr></tbody>
+    </table>
+</div>
+
+<h2 class="section-title">🚀 翌日+2%達成 最強の条件組み合わせ TOP30</h2>
+<p class="note">※ 翌日の終値が+2%以上上昇する確率が高い組み合わせです。全体の翌日+2%達成率: 11.3%</p>
+<div class="card">
+    <table>
+        <thead><tr>
+            <th style="width:40px">順位</th><th>条件の組み合わせ</th><th>件数</th><th>翌日+2%達成率</th>
+        </tr></thead>
+        <tbody>
+        <tr>
+            <td style="text-align:center">🥇</td>
+            <td>RSI 30-50 + 当日陰線 + 前日陽線</td>
+            <td style="text-align:right">13</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">46.2%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">🥈</td>
+            <td>RSI 30-50 + 前日陽線</td>
+            <td style="text-align:right">14</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">42.9%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">🥉</td>
+            <td>出来高比≥1.2 + 当日陰線 + 長大上ヒゲ</td>
+            <td style="text-align:right">14</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">42.9%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">4</td>
+            <td>RSI 30-50 + 出来高比≥1.2 + 週足SMA20上抜け</td>
+            <td style="text-align:right">15</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">40.0%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">5</td>
+            <td>出来高比≥1.5 + 当日陰線 + 火〜木曜</td>
+            <td style="text-align:right">34</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">35.3%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">6</td>
+            <td>出来高比≥1.2 + 当日陰線 + 前日大陰線</td>
+            <td style="text-align:right">12</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">33.3%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">7</td>
+            <td>RSI 30-50 + 出来高比≥1.2 + 火〜木曜</td>
+            <td style="text-align:right">16</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">31.2%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">8</td>
+            <td>出来高比≥1.2 + 押し目(プルバック) + 火〜木曜</td>
+            <td style="text-align:right">46</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">30.4%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">9</td>
+            <td>出来高比≥1.5 + 前日陰線 + 火〜木曜</td>
+            <td style="text-align:right">40</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">30.0%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">10</td>
+            <td>RSI 30-50 + 出来高比≥1.2 + 当日陰線</td>
+            <td style="text-align:right">30</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">30.0%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">11</td>
+            <td>出来高比≥1.2 + 長大上ヒゲ + 週足SMA20上抜け</td>
+            <td style="text-align:right">27</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">29.6%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">12</td>
+            <td>出来高比≥1.5 + 押し目(プルバック) + 火〜木曜</td>
+            <td style="text-align:right">17</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">29.4%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">13</td>
+            <td>RSI 30-50 + 出来高比≥1.2</td>
+            <td style="text-align:right">31</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">29.0%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">14</td>
+            <td>出来高比≥1.2 + 前日陰線 + 押し目(プルバック)</td>
+            <td style="text-align:right">38</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">28.9%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">15</td>
+            <td>RSI 30-50 + 当日陰線 + 週足SMA20上抜け</td>
+            <td style="text-align:right">32</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">28.1%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">16</td>
+            <td>出来高比≥1.5 + 当日陰線 + 前日陰線</td>
+            <td style="text-align:right">32</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">28.1%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">17</td>
+            <td>出来高比≥1.2 + 前日陽線 + 長大上ヒゲ</td>
+            <td style="text-align:right">25</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">28.0%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">18</td>
+            <td>出来高比≥1.2 + 当日陰線 + 火〜木曜</td>
+            <td style="text-align:right">90</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">27.8%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">19</td>
+            <td>出来高比≥1.5 + 当日陰線 + 週足SMA20上抜け</td>
+            <td style="text-align:right">36</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">27.8%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">20</td>
+            <td>出来高比≥1.2 + 当日陰線 + 前日陰線</td>
+            <td style="text-align:right">65</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">27.7%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">21</td>
+            <td>RSI 30-50 + 出来高比≥1.5 + 当日陰線</td>
+            <td style="text-align:right">15</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">26.7%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">22</td>
+            <td>出来高比≥1.2 + 前日大陰線 + 火〜木曜</td>
+            <td style="text-align:right">15</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">26.7%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">23</td>
+            <td>出来高比≥1.5 + 前日陰線 + 前日大陰線</td>
+            <td style="text-align:right">15</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">26.7%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">24</td>
+            <td>RSI 30-50 + 週足SMA20上抜け</td>
+            <td style="text-align:right">34</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">26.5%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">25</td>
+            <td>出来高比≥1.5 + 押し目(プルバック) + 週足SMA20上抜け</td>
+            <td style="text-align:right">19</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">26.3%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">26</td>
+            <td>出来高比≥1.2 + 長大上ヒゲ + 火〜木曜</td>
+            <td style="text-align:right">23</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">26.1%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">27</td>
+            <td>RSI 50-65 + 出来高比≥1.5 + 火〜木曜</td>
+            <td style="text-align:right">27</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">25.9%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">28</td>
+            <td>出来高比≥1.2 + 当日陰線 + 押し目(プルバック)</td>
+            <td style="text-align:right">62</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">25.8%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">29</td>
+            <td>RSI 30-50 + 出来高比≥1.5</td>
+            <td style="text-align:right">16</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">25.0%</td>
+        </tr>
+        <tr>
+            <td style="text-align:center">30</td>
+            <td>出来高比≥1.5 + 前日大陰線</td>
+            <td style="text-align:right">16</td>
+            <td style="text-align:right;font-weight:bold;color:#10b981">25.0%</td>
+        </tr></tbody>
+    </table>
+</div>
+
+<p class="note" style="text-align:center; margin-top:2rem">
+    生成日時: 2026年03月14日 22:25 ・ 
+    基準: SMA5&gt;SMA20&gt;SMA60, 出来高≥1,000,000株 ・ 対象: S&amp;P 500
+</p>
+
+</body>
+</html>
