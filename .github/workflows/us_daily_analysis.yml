@@ -1,0 +1,38 @@
+# 毎日取引終了後に米国株の特徴量分析を自動更新するワークフロー
+# NYSE/NASDAQ取引終了（16:00 EST）+ データ反映待ち → 22:00 UTC に実行
+name: 🇺🇸 米国株 特徴量分析 自動更新
+
+on:
+  schedule:
+    # 月〜金の 22:00 UTC（= 翌7:00 JST）に実行
+    - cron: '0 22 * * 1-5'
+  workflow_dispatch:  # 手動実行も可能
+
+jobs:
+  update-us-analysis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: 📥 コードをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: 🐍 Python セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 📦 依存パッケージをインストール
+        run: pip install -r requirements.txt
+
+      - name: 🇺🇸 米国株 全銘柄分析を実行
+        run: python us_analyze_features.py
+
+      - name: 📤 結果をコミット＆プッシュ
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add us_results/us_top_combos.json us_results/us_feature_analysis_report.html
+          git diff --cached --quiet || git commit -m "🇺🇸 米国株分析データ自動更新 $(date -u '+%Y-%m-%d')"
+          git push

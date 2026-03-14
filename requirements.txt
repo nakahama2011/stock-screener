@@ -7,3 +7,5 @@ requests
 openpyxl
 xlrd
 tradingview-screener
+lxml
+html5lib
