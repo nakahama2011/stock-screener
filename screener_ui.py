@@ -443,6 +443,8 @@ def run_single_day_screen(
             "出来高比(20MA)": screen_result["volume_ratio"],
             "ATR%": screen_result.get("atr_pct"),
             "RSI(14)": screen_result.get("rsi"),
+            # 推定売買可能額計算用
+            "_volume_ratio_raw": screen_result.get("volume_ratio", 0),
             # ―― スコアリング用内部フィールド ――
             "_close": screen_result["close"],
             "_sma5": screen_result["sma5"],
@@ -521,6 +523,13 @@ def run_single_day_screen(
     ]
     # スコアリング用の内部列（_ プレフィックス）も一緒に保持する
     score_internal_cols = [c for c in result_df.columns if c.startswith("_")]
+
+    # 推定売買可能額を計算（20日平均出来高 × 終値 × 1%）
+    if "_volume_ratio_raw" in result_df.columns and "_close" in result_df.columns and "出来高" in result_df.columns:
+        vol_ratio = pd.to_numeric(result_df["_volume_ratio_raw"], errors="coerce").replace(0, np.nan)
+        vol_20ma = pd.to_numeric(result_df["出来高"], errors="coerce") / vol_ratio
+        close = pd.to_numeric(result_df["_close"], errors="coerce")
+        result_df["推定売買可能額"] = vol_20ma * close * 0.01
 
     # 翌日到達・3日目到達・5日目到達 列を作成（○/✕）
     hit_1d_col = f"_hit_{hit_threshold_val:.0f}pct_1d"
@@ -1144,6 +1153,15 @@ if "result_df" in st.session_state:
             # 終値
             if col == "終値":
                 return f"{v:,.1f}", ""
+
+            # 推定売買可能額（万円/億円表記）
+            if col == "推定売買可能額":
+                if v >= 1e8:
+                    return f"{v/1e8:.1f}億", "color:#6366f1;font-weight:bold"
+                elif v >= 1e4:
+                    return f"{v/1e4:.0f}万", "color:#6366f1"
+                else:
+                    return f"{v:,.0f}", "color:#94a3b8"
 
             # 出来高
             if col == "出来高":
