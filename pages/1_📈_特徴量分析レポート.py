@@ -210,41 +210,23 @@ if os.path.exists(_ranking_path):
         ranking = json.load(f)
 
     st.markdown("---")
-    st.subheader("🏆 フィルター条件ランキング（+2%到達率）")
-    st.caption(f"全{ranking.get('total_signals',0):,}シグナル中、条件別の5日以内+2%到達率。全体平均: {ranking.get('overall_rate',0):.1f}%")
+    st.subheader("🏆 フィルター条件コンボランキング（+2%到達率）")
+    st.caption(f"全{ranking.get('total_signals',0):,}シグナル中、2条件組み合わせの5日以内+2%到達率。全体平均: {ranking.get('overall_rate',0):.1f}%")
 
-    tab_single, tab_combo = st.tabs(["📋 単一条件 TOP10", "🔗 2条件組み合わせ TOP15"])
-
-    with tab_single:
-        single = ranking.get("single", [])[:10]
-        if single:
-            s_df = pd.DataFrame(single)
-            s_df = s_df.rename(columns={"条件": "フィルター条件", "+2%到達率": "到達率(%)", "平均到達日": "平均到達日数"})
-            cols_show = ["フィルター条件", "件数", "到達率(%)", "平均到達日数"]
-            s_df = s_df[[c for c in cols_show if c in s_df.columns]]
-            st.dataframe(
-                s_df.style
-                    .bar(subset=["到達率(%)"], color="#6366f1", vmin=50, vmax=90)
-                    .format({"到達率(%)": "{:.1f}%", "平均到達日数": "{:.1f}日"}),
-                use_container_width=True,
-                hide_index=True,
-            )
-
-    with tab_combo:
-        combo = ranking.get("combo", [])[:15]
-        if combo:
-            c_df = pd.DataFrame(combo)
-            c_df["フィルター条件"] = c_df["条件1"] + " ＋ " + c_df["条件2"]
-            c_df = c_df.rename(columns={"+2%到達率": "到達率(%)", "平均到達日": "平均到達日数"})
-            cols_show = ["フィルター条件", "件数", "到達率(%)", "平均到達日数"]
-            c_df = c_df[[c for c in cols_show if c in c_df.columns]]
-            st.dataframe(
-                c_df.style
-                    .bar(subset=["到達率(%)"], color="#10b981", vmin=70, vmax=90)
-                    .format({"到達率(%)": "{:.1f}%", "平均到達日数": "{:.1f}日"}),
-                use_container_width=True,
-                hide_index=True,
-            )
+    combo = ranking.get("combo", [])[:15]
+    if combo:
+        c_df = pd.DataFrame(combo)
+        c_df["フィルター条件"] = c_df["条件1"] + " ＋ " + c_df["条件2"]
+        c_df = c_df.rename(columns={"+2%到達率": "到達率(%)", "平均到達日": "平均到達日数"})
+        cols_show = ["フィルター条件", "件数", "到達率(%)", "平均到達日数"]
+        c_df = c_df[[c for c in cols_show if c in c_df.columns]]
+        st.dataframe(
+            c_df.style
+                .bar(subset=["到達率(%)"], color="#10b981", vmin=70, vmax=90)
+                .format({"到達率(%)": "{:.1f}%", "平均到達日数": "{:.1f}日"}),
+            use_container_width=True,
+            hide_index=True,
+        )
 
     # トップコンボを強調
     if ranking.get("combo"):
