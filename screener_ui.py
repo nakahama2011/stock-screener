@@ -1253,6 +1253,12 @@ if "result_df" in st.session_state:
 
             rows_html += f"<tr>{code_cell}{name_cell}{other_cells}</tr>\n"
 
+        # 凡例
+        st.caption(
+            "📌 **日次リターン（%）= 終値ベース**（前日終値→当日終値の騰落率）　"
+            "| **到達判定（○/✕）・到達日 = 高値ベース**（日中の高値が+3%指値に到達したか）"
+        )
+
         n_rows = len(display_df)
         table_height = min(max(n_rows * 42 + 60, 200), 600)
         bd_json = _json.dumps(breakdown_data, ensure_ascii=False)
@@ -1426,12 +1432,6 @@ tr:hover td{{background:rgba(255,255,255,0.03)}}
 </html>"""
 
         st.components.v1.html(_table_html, height=table_height + 4, scrolling=False)
-
-        # 凡例
-        st.caption(
-            "📌 **日次リターン（%）= 終値ベース**（前日終値→当日終値の騰落率）　"
-            "| **到達判定（○/✕）・到達日 = 高値ベース**（日中の高値が+3%指値に到達したか）"
-        )
 
 
 
