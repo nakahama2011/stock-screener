@@ -37,7 +37,10 @@ def load_data():
 
     if os.path.exists(csv_path):
         df = pd.read_csv(csv_path)
-        hit_cols = [f"hit_2pct_{n}d" for n in [1,2,3,4,5] if f"hit_2pct_{n}d" in df.columns]
+        # +3%到達ラベル優先、フォールバックで+2%
+        hit_cols = [f"hit_3pct_{n}d" for n in [1,2,3,4,5] if f"hit_3pct_{n}d" in df.columns]
+        if not hit_cols:
+            hit_cols = [f"hit_2pct_{n}d" for n in [1,2,3,4,5] if f"hit_2pct_{n}d" in df.columns]
         if hit_cols:
             df["hit_5d"] = df[hit_cols].max(axis=1)
         for sma, feat in [("sma5","sma5_dist_pct"),("sma20","sma20_dist_pct"),("sma60","sma60_dist_pct")]:
@@ -85,7 +88,7 @@ col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.metric("学習データ数", f"{n_total:,}件", f"{n_dates}営業日")
 with col2:
-    st.metric("+2%到達率（高値5日）", f"{hit_rate:.1f}%", f"{int(df['hit_5d'].sum()):,}件到達")
+    st.metric("+3%到達率（高値5日）", f"{hit_rate:.1f}%", f"{int(df['hit_5d'].sum()):,}件到達")
     # +3%到達率も計算
     hit3_cols = [f"hit_2pct_{n}d" for n in [1,2,3,4,5] if f"hit_2pct_{n}d" in df.columns]
     if "max_ret_5d" in df.columns:
@@ -163,7 +166,7 @@ else:
 # セクション2: AI予測確率帯別の実際の到達率
 # =============================================
 st.markdown("---")
-st.subheader("🎯 AI予測確率帯 × 実際の+2%到達率")
+st.subheader("🎯 AI予測確率帯 × 実際の+3%到達率")
 
 try:
     import joblib
@@ -216,14 +219,14 @@ if os.path.exists(_ranking_path):
         ranking = json.load(f)
 
     st.markdown("---")
-    st.subheader("🏆 フィルター条件コンボランキング（+2%到達率）")
-    st.caption(f"全{ranking.get('total_signals',0):,}シグナル中、2条件組み合わせの5日以内+2%到達率。全体平均: {ranking.get('overall_rate',0):.1f}%")
+    st.subheader("🏆 フィルター条件コンボランキング（+3%到達率）")
+    st.caption(f"全{ranking.get('total_signals',0):,}シグナル中、2条件組み合わせの5日以内+3%到達率。全体平均: {ranking.get('overall_rate',0):.1f}%")
 
     combo = ranking.get("combo", [])[:15]
     if combo:
         c_df = pd.DataFrame(combo)
         c_df["フィルター条件"] = c_df["条件1"] + " ＋ " + c_df["条件2"]
-        c_df = c_df.rename(columns={"+2%到達率": "到達率(%)", "平均到達日": "平均到達日数"})
+        c_df = c_df.rename(columns={"+3%到達率": "到達率(%)", "平均到達日": "平均到達日数"})
         cols_show = ["フィルター条件", "件数", "到達率(%)", "平均到達日数"]
         c_df = c_df[[c for c in cols_show if c in c_df.columns]]
         st.dataframe(
@@ -237,7 +240,7 @@ if os.path.exists(_ranking_path):
     # トップコンボを強調
     if ranking.get("combo"):
         top = ranking["combo"][0]
-        st.success(f"🏆 **最強コンボ: {top['条件1']} ＋ {top['条件2']}** → 到達率 **{top['+2%到達率']:.1f}%** ({top['件数']}件, 平均{top.get('平均到達日',0):.1f}日)")
+        st.success(f"🏆 **最強コンボ: {top['条件1']} ＋ {top['条件2']}** → 到達率 **{top['+3%到達率']:.1f}%** ({top['件数']}件, 平均{top.get('平均到達日',0):.1f}日)")
 
 # =============================================
 # セクション4: 到達日数分布
