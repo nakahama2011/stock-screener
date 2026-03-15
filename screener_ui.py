@@ -526,7 +526,7 @@ def run_single_day_screen(
 
     # 推定売買可能額を計算（20日平均出来高 × 終値 × 1%）
     if "_volume_ratio_raw" in result_df.columns and "_close" in result_df.columns and "出来高" in result_df.columns:
-        vol_ratio = pd.to_numeric(result_df["_volume_ratio_raw"], errors="coerce").replace(0, np.nan)
+        vol_ratio = pd.to_numeric(result_df["_volume_ratio_raw"], errors="coerce").replace(0, float("nan"))
         vol_20ma = pd.to_numeric(result_df["出来高"], errors="coerce") / vol_ratio
         close = pd.to_numeric(result_df["_close"], errors="coerce")
         result_df["推定売買可能額"] = vol_20ma * close * 0.01
