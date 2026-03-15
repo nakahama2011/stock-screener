@@ -780,20 +780,18 @@ if "result_df" in st.session_state:
         except Exception:
             display_df["AI予測(%)"] = None
 
-        # _screen_resultは表示に不要なので削除
-        if "_screen_result" in display_df.columns:
-            display_df = display_df.drop(columns=["_screen_result"])
+        # _screen_resultの削除はTOPマッチング後に行う（レンジ幅条件で必要）
 
-        # ---- TOP30コンボマッチング ----
-        _combo_json_path = os.path.join(
+        # ---- フィルターコンボランキングのマッチング ----
+        _ranking_json_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
-            "results", "top_combos.json",
+            "results", "filter_ranking.json",
         )
-        if os.path.exists(_combo_json_path):
+        if os.path.exists(_ranking_json_path):
             import json as _json
-            with open(_combo_json_path, "r", encoding="utf-8") as _cf:
-                _combo_data = _json.load(_cf)
-            _top_combos = _combo_data.get("combos_5d", [])[:30]  # 上位30件すべて
+            with open(_ranking_json_path, "r", encoding="utf-8") as _cf:
+                _ranking_data = _json.load(_cf)
+            _top_combos = _ranking_data.get("combo", [])[:15]
 
             def _check_condition(row, cond_name):
                 """1つの条件を銘柄データに対して評価する"""
@@ -801,50 +799,76 @@ if "result_df" in st.session_state:
                 vol_ratio = float(row.get("出来高比(20MA)", 0) or 0)
                 day_pct = float(row.get("当日(%)", 0) or 0)
                 prev_pct = float(row.get("前日(%)", 0) or 0)
+                atr = float(row.get("ATR%", 0) or 0)
                 dow = int(row.get("_day_of_week", -1))
+                # SMA乖離率は内部データから計算
+                close = float(row.get("_close", 0) or 0)
+                sma60 = float(row.get("_sma60", 0) or 0)
+                sma20 = float(row.get("_sma20", 0) or 0)
+                sma60_dist = ((close - sma60) / sma60 * 100) if sma60 > 0 else 0
+                sma20_dist = ((close - sma20) / sma20 * 100) if sma20 > 0 else 0
 
-                if cond_name == "RSI 50-65":
-                    return 50 <= rsi <= 65
-                elif cond_name == "RSI 30-50":
-                    return 30 <= rsi < 50
-                elif cond_name == "出来高比≥1.2":
-                    return vol_ratio >= 1.2
-                elif cond_name == "出来高比≥1.5":
-                    return vol_ratio >= 1.5
-                elif cond_name == "当日陽線":
-                    return day_pct > 0
-                elif cond_name == "当日陰線":
-                    return day_pct < 0
-                elif cond_name == "前日陰線":
-                    return prev_pct < 0
-                elif cond_name == "前日陽線":
-                    return prev_pct > 0
-                elif cond_name == "押し目(プルバック)":
-                    return bool(row.get("_is_pullback"))
-                elif cond_name == "20日高値ブレイク":
-                    return bool(row.get("_is_breakout"))
-                elif cond_name == "長大上ヒゲ":
-                    return bool(row.get("_long_upper_wick"))
-                elif cond_name == "高値圏(20日HH 3%以内)":
-                    return bool(row.get("_is_high_zone"))
-                elif cond_name == "前日大陰線":
-                    return bool(row.get("_big_bearish_yesterday"))
-                elif cond_name == "週足SMA20上抜け":
-                    return bool(row.get("_weekly_sma20_ok"))
-                elif cond_name == "火〜木曜":
-                    return dow in [1, 2, 3]
+                # RSI条件
+                if cond_name == "RSI≤40": return rsi <= 40
+                elif cond_name == "RSI≤50": return rsi <= 50
+                elif cond_name == "RSI 30-50": return 30 <= rsi <= 50
+                elif cond_name == "RSI 40-55": return 40 <= rsi <= 55
+                elif cond_name == "RSI 50-65": return 50 <= rsi <= 65
+                # 出来高条件
+                elif cond_name == "出来高比≥1.2": return vol_ratio >= 1.2
+                elif cond_name == "出来高比≥1.5": return vol_ratio >= 1.5
+                elif cond_name == "出来高比≥2.0": return vol_ratio >= 2.0
+                # 騰落率条件
+                elif cond_name == "当日↓(マイナス)": return day_pct < 0
+                elif cond_name == "当日≤-1%": return day_pct <= -1
+                elif cond_name == "当日≤-2%": return day_pct <= -2
+                elif cond_name == "前日↓(マイナス)": return prev_pct < 0
+                elif cond_name == "前日≤-1%": return prev_pct <= -1
+                # ATR条件
+                elif cond_name == "ATR%≥2.5": return atr >= 2.5
+                elif cond_name == "ATR%≥3.0": return atr >= 3.0
+                elif cond_name == "ATR%≥4.0": return atr >= 4.0
+                # SMA乖離条件
+                elif cond_name == "SMA60乖離≤5%": return sma60_dist <= 5
+                elif cond_name == "SMA60乖離≤10%": return sma60_dist <= 10
+                elif cond_name == "SMA20乖離≤3%": return sma20_dist <= 3
+                # レンジ幅（内部データから計算）
+                elif cond_name == "レンジ幅≥3%" or cond_name == "レンジ幅≥4%":
+                    sr = row.get("_screen_result") if "_screen_result" in row.index else None
+                    if sr and isinstance(sr, dict):
+                        hp = float(sr.get("high_price", 0) or 0)
+                        lp = float(sr.get("low_price", 0) or 0)
+                        if close > 0 and hp > 0 and lp > 0:
+                            rng = (hp - lp) / close * 100
+                            thr = 4.0 if "4%" in cond_name else 3.0
+                            return rng >= thr
+                    return False
+                # フラグ条件
+                elif cond_name == "プルバック": return bool(row.get("_is_pullback"))
+                elif cond_name == "前日大陰線": return bool(row.get("_big_bearish_yesterday"))
+                # 旧条件名の互換性
+                elif cond_name == "当日陰線": return day_pct < 0
+                elif cond_name == "前日陰線": return prev_pct < 0
+                elif cond_name == "当日陽線": return day_pct > 0
+                elif cond_name == "前日陽線": return prev_pct > 0
+                elif cond_name == "20日高値ブレイク": return bool(row.get("_is_breakout"))
+                elif cond_name == "長大上ヒゲ": return bool(row.get("_long_upper_wick"))
+                elif cond_name == "高値圏(20日HH 3%以内)": return bool(row.get("_is_high_zone"))
+                elif cond_name == "週足SMA20上抜け": return bool(row.get("_weekly_sma20_ok"))
+                elif cond_name == "火〜木曜": return dow in [1, 2, 3]
                 return False
 
             def _match_top_combos(row):
                 """銘柄が該当するTOPコンボを特定する"""
                 matched = []
                 for i, combo in enumerate(_top_combos):
-                    conditions = combo["conditions"].split(" + ")
-                    if all(_check_condition(row, c) for c in conditions):
+                    c1 = combo.get("条件1", "")
+                    c2 = combo.get("条件2", "")
+                    if _check_condition(row, c1) and _check_condition(row, c2):
                         rank = i + 1
                         medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else f"#{rank}"
                         matched.append(medal)
-                        if len(matched) >= 5:  # 最大5つ表示
+                        if len(matched) >= 5:
                             break
                 return " ".join(matched) if matched else ""
 
@@ -855,6 +879,10 @@ if "result_df" in st.session_state:
                 cols.remove("🏆TOP該当")
                 cols.insert(0, "🏆TOP該当")
                 display_df = display_df[cols]
+
+        # _screen_resultは表示に不要なので削除
+        if "_screen_result" in display_df.columns:
+            display_df = display_df.drop(columns=["_screen_result"])
 
         # フィルタ
         if show_filter == "🏆 高勝率コンボ":
