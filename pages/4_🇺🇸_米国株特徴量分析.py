@@ -222,9 +222,13 @@ if os.path.exists(_ranking_path):
     # us_top_combos.jsonの形式に合わせる
     combos = ranking.get("combos_5d", ranking.get("combo", []))[:15]
     total_sigs = ranking.get("total_signals", 0)
-    overall = ranking.get("overall_rate", 0)
+    overall = ranking.get("overall", ranking.get("overall_rate", {}))
+    if isinstance(overall, dict):
+        overall_rate = overall.get("win_rate", 0)
+    else:
+        overall_rate = overall
     if total_sigs:
-        st.caption(f"全{total_sigs:,}シグナル中、2条件組み合わせの5日以内+2%到達率。全体平均: {overall:.1f}%")
+        st.caption(f"全{total_sigs:,}シグナル中、2条件組み合わせの5日以内+2%到達率。全体平均: {overall_rate:.1f}%")
 
     if combos:
         c_data = []
@@ -232,7 +236,7 @@ if os.path.exists(_ranking_path):
             c_data.append({
                 "フィルター条件": combo.get("conditions", ""),
                 "件数": combo.get("count", combo.get("件数", 0)),
-                "到達率(%)": combo.get("hit_rate", combo.get("+2%到達率", 0)),
+                "到達率(%)": combo.get("win_rate", combo.get("hit_rate", combo.get("+2%到達率", 0))),
                 "平均到達日数": combo.get("avg_days", combo.get("平均到達日", 0)),
             })
         c_df = pd.DataFrame(c_data)
@@ -248,7 +252,7 @@ if os.path.exists(_ranking_path):
     if combos:
         top = combos[0]
         cond = top.get("conditions", "")
-        hr = top.get("hit_rate", top.get("+2%到達率", 0))
+        hr = top.get("win_rate", top.get("hit_rate", top.get("+2%到達率", 0)))
         cnt = top.get("count", top.get("件数", 0))
         avg_d = top.get("avg_days", top.get("平均到達日", 0))
         st.success(f"🏆 **最強コンボ: {cond}** → 到達率 **{hr:.1f}%** ({cnt}件, 平均{avg_d:.1f}日)")
