@@ -540,7 +540,8 @@ def run_single_day_screen(
     existing = [c for c in display_cols if c in result_df.columns] + score_internal_cols
     result_df = result_df[existing]
 
-    result_df = result_df.sort_values("AI予測(%)", ascending=False, na_position="last")
+    # ※ AI予測(%)列は後段で計算されるため、ここでは銘柄コード順で返す
+    result_df = result_df.sort_values("銘柄コード", ascending=True, na_position="last")
     return result_df, "", date_labels
 
 
