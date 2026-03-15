@@ -428,9 +428,11 @@ def run_single_day_screen(
             "3日後(%)": fwd.get("ret_3d"),
             "4日後(%)": fwd.get("ret_4d"),
             "5日後(%)": fwd.get("ret_5d"),
-            f"+{hit_threshold_val:.0f}%達成(明日)": fwd.get(f"hit_{hit_threshold_val:.0f}pct_1d"),
-            "3日以内プラス": fwd.get("pos_within_3d"),
-            "5日以内プラス": fwd.get("pos_within_5d"),
+            "翌日リターン(%)": fwd.get("cum_ret_1d"),
+            "3日以内最大(%)": fwd.get("max_ret_3d"),
+            "5日以内最大(%)": fwd.get("max_ret_5d"),
+            "+2%到達日": fwd.get("days_to_target"),
+            "ATR%": screen_result.get("atr_pct"),
             # ---- スコアリング用内部フィールド（テーブル非表示）----
             "_weekly_sma20_ok":       screen_result.get("weekly_sma20_ok", False),
             "_vol_today_vs_yday_pct": screen_result.get("vol_today_vs_yday_pct"),
@@ -580,9 +582,9 @@ if "result_df" in st.session_state:
                     "📉 3日連続マイナス",
                     "明日プラスのみ",
                     "明日マイナスのみ",
-                    f"+{saved_hit_thr:.0f}%達成のみ",
-                    "3日以内プラスのみ",
-                    "5日以内プラスのみ",
+                    f"+{saved_hit_thr:.0f}%到達のみ",
+                    "3日以内+2%到達",
+                    "5日以内+2%到達",
                     "🏆 TOP30該当のみ",
                     "🎯 初回SMA20タッチ",
                 ],
@@ -591,7 +593,7 @@ if "result_df" in st.session_state:
         with col_f2:
             sort_col = st.selectbox(
                 "並び順",
-                ["AI予測（降順）", "明日（降順）", "明日（昇順）", "出来高（降順）", "銘柄コード"],
+                ["AI予測（降順）", "回転スコア（降順）", "+2%到達日（昇順）", "明日（降順）", "明日（昇順）", "出来高（降順）", "銘柄コード"],
                 key="sort_col",
             )
         with col_f3:
@@ -687,6 +689,44 @@ if "result_df" in st.session_state:
 
         display_df = display_df.copy()
         display_df["予測スコア"] = display_df.apply(_calc_score, axis=1)
+
+        # ---- 回転スコア計算（米国株と同じロジック） ----
+        def _calc_rotation_score(row):
+            score = 0
+            try:
+                rsi = float(row.get("RSI(14)", 50))
+                if 30 <= rsi <= 50: score += 20
+                elif 50 < rsi <= 55: score += 10
+            except: pass
+            try:
+                vr = float(row.get("出来高比(20MA)", 0))
+                if vr >= 2.0: score += 25
+                elif vr >= 1.5: score += 15
+                elif vr >= 1.2: score += 5
+            except: pass
+            if row.get("_is_pullback"): score += 15
+            if row.get("_big_bearish_yesterday"): score += 10
+            try:
+                dc = float(row.get("当日(%)", 0))
+                if dc < -1.0: score += 10
+                elif dc < 0: score += 5
+            except: pass
+            try:
+                dow = int(row.get("_day_of_week", -1))
+                if dow in [1, 2, 3]: score += 5
+            except: pass
+            try:
+                if float(row.get("RSI(14)", 0)) > 62: score -= 10
+            except: pass
+            if row.get("_long_upper_wick"): score -= 10
+            if row.get("_is_high_zone"): score -= 10
+            return max(score, 0)
+
+        display_df["回転スコア"] = display_df.apply(_calc_rotation_score, axis=1)
+
+        # 到達日列のリネーム
+        if "+2%到達日" in display_df.columns:
+            display_df["到達日"] = display_df["+2%到達日"]
 
         # ---- AI予測確率の計算（日本株専用モデル） ----
         try:
@@ -852,11 +892,14 @@ if "result_df" in st.session_state:
         elif show_filter == "明日マイナスのみ":
             display_df = display_df[display_df["明日(%)"] < 0]
         elif "達成のみ" in show_filter:
-            display_df = display_df[display_df[hit_col] == 1]
-        elif show_filter == "3日以内プラスのみ":
-            display_df = display_df[display_df["3日以内プラス"] == 1]
-        elif show_filter == "5日以内プラスのみ":
-            display_df = display_df[display_df["5日以内プラス"] == 1]
+            if "5日以内最大(%)" in display_df.columns:
+                display_df = display_df[display_df["5日以内最大(%)"] >= 2.0]
+        elif show_filter == "3日以内+2%到達":
+            if "3日以内最大(%)" in display_df.columns:
+                display_df = display_df[display_df["3日以内最大(%)"] >= 2.0]
+        elif show_filter == "5日以内+2%到達":
+            if "5日以内最大(%)" in display_df.columns:
+                display_df = display_df[display_df["5日以内最大(%)"] >= 2.0]
         elif show_filter == "🏆 TOP30該当のみ":
             if "🏆TOP該当" in display_df.columns:
                 display_df = display_df[display_df["🏆TOP該当"].astype(str).str.len() > 0]
@@ -867,6 +910,10 @@ if "result_df" in st.session_state:
         # ソート
         if sort_col == "AI予測（降順）" and "AI予測(%)" in display_df.columns:
             display_df = display_df.sort_values("AI予測(%)", ascending=False, na_position="last")
+        elif sort_col == "回転スコア（降順）":
+            display_df = display_df.sort_values("回転スコア", ascending=False, na_position="last")
+        elif sort_col == "+2%到達日（昇順）" and "+2%到達日" in display_df.columns:
+            display_df = display_df.sort_values("+2%到達日", ascending=True, na_position="last")
         elif sort_col == "明日（降順）":
             display_df = display_df.sort_values("明日(%)", ascending=False, na_position="last")
         elif sort_col == "明日（昇順）":
@@ -957,13 +1004,48 @@ if "result_df" in st.session_state:
                     style = ""
                 return pct_str, style
 
-            # 達成フラグ関連
-            if col in [hit_col, "3日以内プラス", "5日以内プラス"]:
-                if v == 1:
-                    return "✅ 達成", "background:rgba(16,185,129,0.2);color:#10b981;font-weight:bold"
-                elif v == 0:
-                    return "✗", "background:rgba(239,68,68,0.1);color:#ef4444"
-                return "—", ""
+            # 翌日リターン・3/5日以内最大(%)
+            if col in ["翌日リターン(%)", "3日以内最大(%)", "5日以内最大(%)"]:
+                pct_str = f"{v:+.2f}%"
+                if v >= 2.0:
+                    return pct_str, "background:rgba(16,185,129,0.25);color:#10b981;font-weight:bold"
+                elif v > 0:
+                    return pct_str, "background:rgba(16,185,129,0.10);color:#10b981"
+                elif v < 0:
+                    return pct_str, "background:rgba(239,68,68,0.15);color:#ef4444"
+                return pct_str, ""
+
+            # +2%到達日
+            if col in ["+2%到達日", "到達日"]:
+                d = int(v)
+                if d == 1:
+                    return f"🎯{d}日目", "background:rgba(234,179,8,0.25);color:#eab308;font-weight:bold"
+                elif d == 2:
+                    return f"✅{d}日目", "background:rgba(16,185,129,0.20);color:#10b981;font-weight:bold"
+                elif d <= 3:
+                    return f"✅{d}日目", "background:rgba(16,185,129,0.12);color:#10b981"
+                else:
+                    return f"{d}日目", "color:#94a3b8"
+
+            # 回転スコア
+            if col == "回転スコア":
+                s = int(v)
+                if s >= 70:
+                    return f"⭐{s}", "background:rgba(234,179,8,0.20);color:#eab308;font-weight:bold"
+                elif s >= 50:
+                    return f"{s}", "background:rgba(16,185,129,0.15);color:#10b981;font-weight:bold"
+                elif s >= 30:
+                    return f"{s}", "color:#10b981"
+                return f"{s}", "color:#94a3b8"
+
+            # ATR%
+            if col == "ATR%":
+                s = f"{v:.1f}%"
+                if v >= 4.0:
+                    return s, "background:rgba(234,179,8,0.20);color:#eab308;font-weight:bold"
+                elif v >= 3.0:
+                    return s, "color:#10b981"
+                return s, "color:#94a3b8"
 
             # RSI
             if col == "RSI(14)":
