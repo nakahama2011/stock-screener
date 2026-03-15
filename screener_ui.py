@@ -1427,6 +1427,12 @@ tr:hover td{{background:rgba(255,255,255,0.03)}}
 
         st.components.v1.html(_table_html, height=table_height + 4, scrolling=False)
 
+        # 凡例
+        st.caption(
+            "📌 **日次リターン（%）= 終値ベース**（前日終値→当日終値の騰落率）　"
+            "| **到達判定（○/✕）・到達日 = 高値ベース**（日中の高値が+3%指値に到達したか）"
+        )
+
 
 
 
