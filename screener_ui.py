@@ -1189,10 +1189,10 @@ if "result_df" in st.session_state:
 
         # ---- カスタムHTMLテーブルを生成する ----
         # 表示列（銘柄コード・銘柄名・予測スコアは固定、残りを順番どおりに。内部変数_付きは除外）
-        skip_cols = {"銘柄コード", "銘柄名", "予測スコア", "AI予測(%)", "5日以内最大(%)", "3日以内最大(%)", "回転スコア"}
+        skip_cols = {"銘柄コード", "銘柄名", "予測スコア", "AI予測(%)", "推定売買可能額", "5日以内最大(%)", "3日以内最大(%)", "回転スコア"}
         # 固定表示列（先頭に配置）
         priority_cols = []
-        for pc in ["AI予測(%)"]:
+        for pc in ["推定売買可能額", "AI予測(%)"]:
             if pc in display_df.columns:
                 priority_cols.append(pc)
         other_cols = priority_cols + [c for c in display_df.columns if c not in skip_cols and not c.startswith("_") and c not in priority_cols]

@@ -1029,10 +1029,10 @@ if "us_result_df" in st.session_state:
             return str(val), ""
 
         # ---- カスタムHTMLテーブル ----
-        skip_cols = {"ティッカー", "銘柄名", "予測スコア", "AI予測(%)", "5日以内最大(%)", "3日以内最大(%)", "回転スコア", "到達日"}
+        skip_cols = {"ティッカー", "銘柄名", "予測スコア", "AI予測(%)", "推定売買可能額", "5日以内最大(%)", "3日以内最大(%)", "回転スコア", "到達日"}
         # 固定表示列（先頭に配置）
         priority_cols = []
-        for pc in ["AI予測(%)"]:
+        for pc in ["推定売買可能額", "AI予測(%)"]:
             if pc in display_df.columns:
                 priority_cols.append(pc)
         other_cols = priority_cols + [c for c in display_df.columns if c not in skip_cols and not c.startswith("_") and c not in priority_cols]
