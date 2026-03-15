@@ -525,11 +525,17 @@ def run_single_day_screen(
     score_internal_cols = [c for c in result_df.columns if c.startswith("_")]
 
     # 推定売買可能額を計算（20日平均出来高 × 終値 × 1%）
-    if "_volume_ratio_raw" in result_df.columns and "_close" in result_df.columns and "出来高" in result_df.columns:
+    has_vr = "_volume_ratio_raw" in result_df.columns
+    has_cl = "_close" in result_df.columns
+    has_vol = "出来高" in result_df.columns
+    if has_vr and has_cl and has_vol:
         vol_ratio = pd.to_numeric(result_df["_volume_ratio_raw"], errors="coerce").replace(0, float("nan"))
         vol_20ma = pd.to_numeric(result_df["出来高"], errors="coerce") / vol_ratio
         close = pd.to_numeric(result_df["_close"], errors="coerce")
         result_df["推定売買可能額"] = vol_20ma * close * 0.01
+    else:
+        # 条件が合わない場合でもNaN列を作成
+        result_df["推定売買可能額"] = float("nan")
 
     # 翌日到達・3日目到達・5日目到達 列を作成（○/✕）
     hit_1d_col = f"_hit_{hit_threshold_val:.0f}pct_1d"
