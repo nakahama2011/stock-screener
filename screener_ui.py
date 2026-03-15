@@ -509,6 +509,7 @@ def run_single_day_screen(
     hit_col_name = f"+{hit_threshold_val:.0f}%到達(5日)"
     display_cols = [
         "銘柄コード", "銘柄名",
+        "推定売買可能額",
         "AI予測(%)",
         "🏆TOP該当",
         "+3%到達日",
