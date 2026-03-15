@@ -516,7 +516,13 @@ def run_single_day_screen(
         result_df["5日目到達"] = result_df[hit_5d_col].apply(
             lambda x: "○" if x == 1 else "✕" if pd.notna(x) else "")
 
+    # KPI計算用の内部列も保持する
+    kpi_internal_cols = ["5日以内最大(%)", "3日以内最大(%)", "+2%到達日"]
     existing = [c for c in display_cols if c in result_df.columns] + score_internal_cols
+    # KPI列がdisplay_colsに含まれていない場合も保持
+    for kc in kpi_internal_cols:
+        if kc in result_df.columns and kc not in existing:
+            existing.append(kc)
     result_df = result_df[existing]
 
     # AI予測(%)列は後段で計算されるため、ここではティッカー順で返す
@@ -1006,8 +1012,13 @@ if "us_result_df" in st.session_state:
             return str(val), ""
 
         # ---- カスタムHTMLテーブル ----
-        skip_cols = {"ティッカー", "銘柄名", "予測スコア"}
-        other_cols = [c for c in display_df.columns if c not in skip_cols and not c.startswith("_")]
+        skip_cols = {"ティッカー", "銘柄名", "予測スコア", "AI予測(%)", "5日以内最大(%)", "3日以内最大(%)", "回転スコア"}
+        # 固定表示列（先頭に配置）
+        priority_cols = []
+        for pc in ["AI予測(%)"]:
+            if pc in display_df.columns:
+                priority_cols.append(pc)
+        other_cols = priority_cols + [c for c in display_df.columns if c not in skip_cols and not c.startswith("_") and c not in priority_cols]
 
         th_cells = "<th>ティッカー</th><th>銘柄名</th>"
         for col in other_cols:
