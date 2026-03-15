@@ -195,10 +195,10 @@ with st.sidebar:
     )
 
     hit_threshold = st.slider(
-        "達成フラグの閾値（%）",
+        "利確目標（%）",
         min_value=0.5,
         max_value=5.0,
-        value=2.0,
+        value=3.0,
         step=0.5,
         key="hit_thr",
     )
@@ -594,8 +594,8 @@ if "result_df" in st.session_state:
                     "明日プラスのみ",
                     "明日マイナスのみ",
                     f"+{saved_hit_thr:.0f}%到達のみ",
-                    "3日以内+2%到達",
-                    "5日以内+2%到達",
+                    f"3日以内+{saved_hit_thr:.0f}%到達",
+                    f"5日以内+{saved_hit_thr:.0f}%到達",
                     "🏆 TOP30該当のみ",
                     "🎯 初回SMA20タッチ",
                 ],
@@ -604,7 +604,7 @@ if "result_df" in st.session_state:
         with col_f2:
             sort_col = st.selectbox(
                 "並び順",
-                ["AI予測（降順）", "回転スコア（降順）", "+2%到達日（昇順）", "明日（降順）", "明日（昇順）", "出来高（降順）", "銘柄コード"],
+                ["AI予測（降順）", "回転スコア（降順）", "到達日（昇順）", "明日（降順）", "明日（昇順）", "出来高（降順）", "銘柄コード"],
                 key="sort_col",
             )
         with col_f3:
@@ -933,12 +933,12 @@ if "result_df" in st.session_state:
         elif "達成のみ" in show_filter:
             if "5日以内最大(%)" in display_df.columns:
                 display_df = display_df[display_df["5日以内最大(%)"] >= 2.0]
-        elif show_filter == "3日以内+2%到達":
+        elif show_filter == f"3日以内+{saved_hit_thr:.0f}%到達":
             if "3日以内最大(%)" in display_df.columns:
-                display_df = display_df[display_df["3日以内最大(%)"] >= 2.0]
-        elif show_filter == "5日以内+2%到達":
+                display_df = display_df[display_df["3日以内最大(%)"] >= saved_hit_thr]
+        elif show_filter == f"5日以内+{saved_hit_thr:.0f}%到達":
             if "5日以内最大(%)" in display_df.columns:
-                display_df = display_df[display_df["5日以内最大(%)"] >= 2.0]
+                display_df = display_df[display_df["5日以内最大(%)"] >= saved_hit_thr]
         elif show_filter == "🏆 TOP30該当のみ":
             if "🏆TOP該当" in display_df.columns:
                 display_df = display_df[display_df["🏆TOP該当"].astype(str).str.len() > 0]
@@ -951,7 +951,7 @@ if "result_df" in st.session_state:
             display_df = display_df.sort_values("AI予測(%)", ascending=False, na_position="last")
         elif sort_col == "回転スコア（降順）":
             display_df = display_df.sort_values("回転スコア", ascending=False, na_position="last")
-        elif sort_col == "+2%到達日（昇順）" and "+2%到達日" in display_df.columns:
+        elif sort_col == "到達日（昇順）" and "+2%到達日" in display_df.columns:
             display_df = display_df.sort_values("+2%到達日", ascending=True, na_position="last")
         elif sort_col == "明日（降順）":
             display_df = display_df.sort_values("明日(%)", ascending=False, na_position="last")
@@ -981,11 +981,11 @@ if "result_df" in st.session_state:
         with col_k3:
             if "5日以内最大(%)" in display_df.columns:
                 _col_5d = display_df["5日以内最大(%)"].dropna()
-                n_hit_2pct = int((_col_5d >= 2.0).sum())
-                rate_2pct = n_hit_2pct / n_total * 100 if n_total > 0 else 0
-                st.metric("+2%到達率(5日)", f"{rate_2pct:.1f}% ({n_hit_2pct}/{n_total})")
+                n_hit = int((_col_5d >= saved_hit_thr).sum())
+                rate_hit = n_hit / n_total * 100 if n_total > 0 else 0
+                st.metric(f"+{saved_hit_thr:.0f}%到達率(5日)", f"{rate_hit:.1f}% ({n_hit}/{n_total})")
             else:
-                st.metric("+2%到達率(5日)", "N/A")
+                st.metric(f"+{saved_hit_thr:.0f}%到達率(5日)", "N/A")
         with col_k4:
             _d2t_col = None
             if "+2%到達日" in display_df.columns:

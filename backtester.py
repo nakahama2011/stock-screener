@@ -45,7 +45,7 @@ JPX_CSV_URL = (
 
 # スクリーニング条件のデフォルト値
 DEFAULT_MIN_VOLUME = 500_000   # 最低出来高: 50万株
-DEFAULT_HIT_THRESHOLD = 2.0   # 達成フラグのリターン閾値 (%)
+DEFAULT_HIT_THRESHOLD = 3.0   # 達成フラグのリターン閾値 (%)
 FORWARD_DAYS = [1, 2, 3, 4, 5]  # 先読み日数
 
 # 並列実行のワーカー数

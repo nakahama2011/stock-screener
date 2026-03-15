@@ -71,7 +71,7 @@ if df is None:
 # ヘッダー
 # =============================================
 st.markdown("# 📈 特徴量分析レポート（日本株）")
-st.markdown("*MLモデル（GradientBoosting）の分析結果と、バックテストデータの統計的分析を統合表示*")
+st.markdown("*MLモデル（GradientBoosting）の分析結果と、バックテストデータの統計的分析を統合表示 | 運用戦略: +3%固定指値、最大10銘柄保有、AI予測90%以上*")
 
 # =============================================
 # KPIカード
@@ -86,8 +86,14 @@ with col1:
     st.metric("学習データ数", f"{n_total:,}件", f"{n_dates}営業日")
 with col2:
     st.metric("+2%到達率（高値5日）", f"{hit_rate:.1f}%", f"{int(df['hit_5d'].sum()):,}件到達")
+    # +3%到達率も計算
+    hit3_cols = [f"hit_2pct_{n}d" for n in [1,2,3,4,5] if f"hit_2pct_{n}d" in df.columns]
+    if "max_ret_5d" in df.columns:
+        hit3_rate = (df["max_ret_5d"].dropna() >= 3.0).mean() * 100
+    else:
+        hit3_rate = 0
 with col3:
-    st.metric("平均到達日数", f"{avg_days:.1f}日" if avg_days > 0 else "N/A")
+    st.metric("+3%到達率（高値5日）", f"{hit3_rate:.1f}%" if hit3_rate > 0 else "N/A")
 with col4:
     n_feat = len(report['feature_names']) if report else 0
     st.metric("特徴量数", f"{n_feat}個", "GradientBoosting")
