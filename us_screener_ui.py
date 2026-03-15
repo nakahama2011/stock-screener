@@ -710,9 +710,7 @@ if "us_result_df" in st.session_state:
         if "_screen_result" in display_df.columns:
             display_df = display_df.drop(columns=["_screen_result"])
 
-        # 到達日列のリネーム（内部名と表示名を揃える）
-        if "+2%到達日" in display_df.columns:
-            display_df["到達日"] = display_df["+2%到達日"]
+        # 到達日列のリネーム不要（+2%到達日をそのまま使用）
 
         # ---- TOP30コンボマッチング ----
         _combo_json_path = os.path.join(
@@ -1012,7 +1010,7 @@ if "us_result_df" in st.session_state:
             return str(val), ""
 
         # ---- カスタムHTMLテーブル ----
-        skip_cols = {"ティッカー", "銘柄名", "予測スコア", "AI予測(%)", "5日以内最大(%)", "3日以内最大(%)", "回転スコア"}
+        skip_cols = {"ティッカー", "銘柄名", "予測スコア", "AI予測(%)", "5日以内最大(%)", "3日以内最大(%)", "回転スコア", "到達日"}
         # 固定表示列（先頭に配置）
         priority_cols = []
         for pc in ["AI予測(%)"]:

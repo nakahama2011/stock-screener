@@ -536,8 +536,12 @@ def run_single_day_screen(
         result_df["5日目到達"] = result_df[hit_5d_col].apply(
             lambda x: "○" if x == 1 else "✕" if pd.notna(x) else "")
 
-    # 既存列だけ抽出
+    # 既存列だけ抽出（KPI計算用列も保持）
+    kpi_internal_cols = ["5日以内最大(%)", "3日以内最大(%)", "+3%到達日"]
     existing = [c for c in display_cols if c in result_df.columns] + score_internal_cols
+    for kc in kpi_internal_cols:
+        if kc in result_df.columns and kc not in existing:
+            existing.append(kc)
     result_df = result_df[existing]
 
     # ※ AI予測(%)列は後段で計算されるため、ここでは銘柄コード順で返す
@@ -1167,7 +1171,7 @@ if "result_df" in st.session_state:
 
         # ---- カスタムHTMLテーブルを生成する ----
         # 表示列（銘柄コード・銘柄名・予測スコアは固定、残りを順番どおりに。内部変数_付きは除外）
-        skip_cols = {"銘柄コード", "銘柄名", "予測スコア", "AI予測(%)"}
+        skip_cols = {"銘柄コード", "銘柄名", "予測スコア", "AI予測(%)", "5日以内最大(%)", "3日以内最大(%)", "回転スコア"}
         # 固定表示列（先頭に配置）
         priority_cols = []
         for pc in ["AI予測(%)"]:
