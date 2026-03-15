@@ -817,7 +817,8 @@ if "us_result_df" in st.session_state:
         elif show_filter == "明日マイナスのみ":
             display_df = display_df[display_df["明日(%)"] < 0]
         elif "以上のみ" in show_filter:
-            display_df = display_df[display_df[hit_col] >= saved_hit_thr]
+            if "5日以内最大(%)" in display_df.columns:
+                display_df = display_df[display_df["5日以内最大(%)"] >= saved_hit_thr]
         elif show_filter == "3日以内プラスのみ":
             display_df = display_df[display_df["3日以内最大(%)"] > 0]
         elif show_filter == "5日以内プラスのみ":
@@ -933,16 +934,6 @@ if "us_result_df" in st.session_state:
             if col in ["3日以内最大(%)", "5日以内最大(%)"]:
                 pct_str = f"{v:+.2f}%"
                 if v >= 2.0:
-                    return pct_str, "background:rgba(16,185,129,0.25);color:#10b981;font-weight:bold"
-                elif v > 0:
-                    return pct_str, "background:rgba(16,185,129,0.10);color:#10b981"
-                elif v < 0:
-                    return pct_str, "background:rgba(239,68,68,0.15);color:#ef4444"
-                return pct_str, ""
-
-            if col == hit_col:
-                pct_str = f"{v:+.2f}%"
-                if v >= saved_hit_thr:
                     return pct_str, "background:rgba(16,185,129,0.25);color:#10b981;font-weight:bold"
                 elif v > 0:
                     return pct_str, "background:rgba(16,185,129,0.10);color:#10b981"
