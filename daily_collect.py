@@ -273,27 +273,121 @@ def step3_update_model():
 
 
 # =========================================================
+# ステップ4: LINE Messaging API通知
+# =========================================================
+def step4_line_notify(screening_df=None):
+    """AI予測90%以上の銘柄をLINE Messaging APIで通知する"""
+    print("\n" + "=" * 60)
+    print("🔔 ステップ4: LINE通知")
+    print("=" * 60)
+
+    token = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN")
+    user_id = os.environ.get("LINE_USER_ID")
+
+    if not token or not user_id:
+        print("⚠️ LINE_CHANNEL_ACCESS_TOKEN / LINE_USER_ID が未設定。通知をスキップ")
+        return
+
+    # スクリーニング結果にAI予測を付与
+    if screening_df is None or screening_df.empty:
+        print("⚠️ スクリーニング結果なし")
+        return
+
+    try:
+        import joblib
+        model_path = os.path.join(RESULTS_DIR, "jp_ml_model.pkl")
+        if not os.path.exists(model_path):
+            print("⚠️ MLモデルなし")
+            return
+
+        model_data = joblib.load(model_path)
+        model = model_data["model"]
+        features = model_data["feature_names"]
+
+        df = screening_df.copy()
+        for c in ["is_pullback","is_breakout","long_upper_wick","is_high_zone",
+                   "big_bearish_yesterday","weekly_sma20_ok","first_sma20_touch"]:
+            if c in df.columns: df[c] = df[c].astype(int)
+        for sma, feat in [("sma5","sma5_dist_pct"),("sma20","sma20_dist_pct"),("sma60","sma60_dist_pct")]:
+            if sma in df.columns and "close" in df.columns:
+                df[feat] = (df["close"] - df[sma]) / df[sma] * 100
+        if "high_price" in df.columns and "low_price" in df.columns:
+            df["price_range_pct"] = (df["high_price"] - df["low_price"]) / df["close"] * 100
+
+        avail = [c for c in features if c in df.columns]
+        for c in avail: df[c] = pd.to_numeric(df[c], errors="coerce")
+        X = df[avail].fillna(0)
+        df["ai_prob"] = model.predict_proba(X)[:, 1] * 100
+
+        # AI予測90%以上を抽出
+        high_prob = df[df["ai_prob"] >= 90].sort_values("ai_prob", ascending=False)
+
+        if high_prob.empty:
+            msg = f"📊 {datetime.now().strftime('%m/%d')} スクリーニング結果\n\n✅ AI予測90%以上: 0銘柄\n全{len(df)}銘柄中"
+        else:
+            lines = [f"📊 {datetime.now().strftime('%m/%d')} スクリーニング結果\n"]
+            lines.append(f"🎯 AI予測90%以上: {len(high_prob)}銘柄\n")
+            for _, row in high_prob.head(10).iterrows():
+                code = int(row["code"])
+                name = row.get("name", "")[:6]
+                prob = row["ai_prob"]
+                change = row.get("day_change_pct", 0) or 0
+                lines.append(f"  {code} {name} AI:{prob:.0f}% {change:+.1f}%")
+            if len(high_prob) > 10:
+                lines.append(f"  ...他{len(high_prob)-10}銘柄")
+            lines.append(f"\n全{len(df)}銘柄スクリーニング済")
+            msg = "\n".join(lines)
+
+        # LINE Messaging API送信
+        import urllib.request
+        url = "https://api.line.me/v2/bot/message/push"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {token}",
+        }
+        body = json.dumps({
+            "to": user_id,
+            "messages": [{"type": "text", "text": msg}]
+        }).encode("utf-8")
+
+        req = urllib.request.Request(url, data=body, headers=headers, method="POST")
+        with urllib.request.urlopen(req) as resp:
+            print(f"✅ LINE通知送信完了（ステータス: {resp.status}）")
+
+    except Exception as e:
+        print(f"⚠️ LINE通知エラー: {e}")
+
+
+# =========================================================
 # メイン
 # =========================================================
 def main():
     """日次データ収集のメイン処理"""
+    import argparse
+    parser = argparse.ArgumentParser(description="日次データ収集パイプライン")
+    parser.add_argument("--model-only", action="store_true",
+                        help="MLモデル＆ランキング更新のみ実行")
+    args = parser.parse_args()
+
     print("🚀 日次データ収集パイプライン開始")
     print(f"   実行日時: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print()
 
-    # ステップ1: スクリーニング結果取得
-    df = step1_fetch_screening()
-
-    # ステップ2: 累積データ更新
-    step2_update_cumulative()
-
-    # ステップ3: MLモデル＆ランキング更新
-    step3_update_model()
+    if args.model_only:
+        # モデル更新のみ
+        step3_update_model()
+    else:
+        # フルパイプライン
+        df = step1_fetch_screening()
+        step2_update_cumulative()
+        step3_update_model()
+        step4_line_notify(df)
 
     print("\n" + "=" * 60)
-    print("✅ 日次データ収集パイプライン完了")
+    print("✅ パイプライン完了")
     print("=" * 60)
 
 
 if __name__ == "__main__":
     main()
+

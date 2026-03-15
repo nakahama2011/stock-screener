@@ -1,21 +1,31 @@
-# 毎日取引終了後に自動で以下を実行するワークフロー:
-# 1. TradingViewスクリーニング結果を日次CSVで保存
-# 2. 累積データを更新
-# 3. MLモデルとフィルターランキングを再計算
+# 毎日の自動データ収集・分析・通知パイプライン
 #
-# 東証取引終了（15:00 JST）+ データ反映待ち → 16:30 JST（= 07:30 UTC）
-# 米国市場終了（16:00 EST / 06:00 JST）+ 反映待ち → 08:00 JST（= 23:00 UTC前日）
+# 実行タイミング:
+#   日本株: 14:30 JST（= 05:30 UTC）取引時間中のリアルタイムスクリーニング
+#   米国株: 07:00 JST（= 22:00 UTC前日）米国市場閉場後
+#
+# 実行内容:
+#   1. TradingViewからスクリーニング結果を取得・CSV保存
+#   2. 累積データ更新
+#   3. MLモデル & フィルターランキング更新
+#   4. AI予測90%以上の銘柄をLINE通知
 
-name: 📊 日次データ収集 & 分析更新
+name: 📊 日次データ収集 & LINE通知
 
 on:
   schedule:
-    # 月〜金の 07:30 UTC（= 16:30 JST）に実行（日本株メイン）
-    - cron: '30 7 * * 1-5'
+    # 日本株: 月〜金 05:30 UTC（= 14:30 JST）
+    - cron: '30 5 * * 1-5'
+    # 米国株: 月〜金 22:00 UTC（= 翌07:00 JST）
+    - cron: '0 22 * * 1-5'
   workflow_dispatch:  # 手動実行も可能
 
 jobs:
-  daily-collect:
+  # ============================
+  # 日本株パイプライン
+  # ============================
+  japan-stocks:
+    if: github.event.schedule == '30 5 * * 1-5' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -32,7 +42,10 @@ jobs:
       - name: 📦 依存パッケージをインストール
         run: pip install -r requirements.txt
 
-      - name: 📡 日次データ収集パイプライン実行
+      - name: 📡 日本株 日次データ収集 & LINE通知
+        env:
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+          LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
         run: python daily_collect.py
 
       - name: 📤 結果をコミット＆プッシュ
@@ -40,5 +53,37 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add results/ -A
-          git diff --cached --quiet || git commit -m "📊 日次データ自動収集 $(TZ=Asia/Tokyo date '+%Y-%m-%d')"
+          git diff --cached --quiet || git commit -m "📊 日本株データ自動収集 $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M')"
+          git push
+
+  # ============================
+  # 米国株パイプライン
+  # ============================
+  us-stocks:
+    if: github.event.schedule == '0 22 * * 1-5'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: 📥 コードをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: 🐍 Python セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 📦 依存パッケージをインストール
+        run: pip install -r requirements.txt
+
+      - name: 📡 米国株 日次データ収集
+        run: python us_daily_collect.py
+
+      - name: 📤 結果をコミット＆プッシュ
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add us_results/ -A
+          git diff --cached --quiet || git commit -m "📊 米国株データ自動収集 $(TZ=America/New_York date '+%Y-%m-%d %H:%M')"
           git push

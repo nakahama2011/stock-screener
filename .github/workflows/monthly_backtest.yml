@@ -1,0 +1,54 @@
+# 月次バックテスト自動更新ワークフロー
+# 毎月1日の08:00 UTC（= 17:00 JST）に実行
+# バックテストを再実行し、MLモデルとフィルターランキングを最新データで更新する
+
+name: 🔄 月次バックテスト & モデル更新
+
+on:
+  schedule:
+    # 毎月1日の 08:00 UTC（= 17:00 JST）に実行
+    - cron: '0 8 1 * *'
+  workflow_dispatch:  # 手動実行も可能
+
+jobs:
+  monthly-backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: 📥 コードをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: 🐍 Python セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 📦 依存パッケージをインストール
+        run: pip install -r requirements.txt
+
+      - name: 📊 日本株バックテスト実行（+3%基準、過去3ヶ月）
+        run: |
+          END_DATE=$(TZ=Asia/Tokyo date -d '-7 days' '+%Y-%m-%d' 2>/dev/null || TZ=Asia/Tokyo date -v-7d '+%Y-%m-%d')
+          START_DATE=$(TZ=Asia/Tokyo date -d '-100 days' '+%Y-%m-%d' 2>/dev/null || TZ=Asia/Tokyo date -v-100d '+%Y-%m-%d')
+          echo "期間: ${START_DATE} 〜 ${END_DATE}"
+          python backtester.py --start "${START_DATE}" --end "${END_DATE}" --hit-pct 3.0
+
+      - name: 🤖 MLモデル & ランキング更新
+        run: python daily_collect.py --model-only
+
+      - name: 📊 米国株バックテスト実行（+2%基準、過去3ヶ月）
+        run: |
+          END_DATE=$(TZ=America/New_York date -d '-7 days' '+%Y-%m-%d' 2>/dev/null || date -v-7d '+%Y-%m-%d')
+          START_DATE=$(TZ=America/New_York date -d '-100 days' '+%Y-%m-%d' 2>/dev/null || date -v-100d '+%Y-%m-%d')
+          echo "期間: ${START_DATE} 〜 ${END_DATE}"
+          python us_backtester.py --start "${START_DATE}" --end "${END_DATE}" --hit-pct 2.0 || echo "⚠️ 米国株バックテストをスキップ"
+
+      - name: 📤 結果をコミット＆プッシュ
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add results/ us_results/ -A
+          git diff --cached --quiet || git commit -m "🔄 月次バックテスト & モデル自動更新 $(TZ=Asia/Tokyo date '+%Y-%m-%d')"
+          git push
