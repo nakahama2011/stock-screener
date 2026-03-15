@@ -940,23 +940,24 @@ if "result_df" in st.session_state:
             else:
                 st.metric("明日勝率", "N/A")
         with col_k3:
-            if "3日以内プラス" in display_df.columns:
-                # NaNを0（未達）として全件で計算
-                _col_3d = display_df["3日以内プラス"].fillna(0)
-                n_win_3d = int((_col_3d == 1).sum())
-                win_rate_3d = n_win_3d / n_total * 100 if n_total > 0 else 0
-                st.metric("3日以内勝率", f"{win_rate_3d:.1f}% ({n_win_3d}/{n_total})")
+            if "5日以内最大(%)" in display_df.columns:
+                _col_5d = display_df["5日以内最大(%)"].dropna()
+                n_hit_2pct = int((_col_5d >= 2.0).sum())
+                rate_2pct = n_hit_2pct / n_total * 100 if n_total > 0 else 0
+                st.metric("+2%到達率(5日)", f"{rate_2pct:.1f}% ({n_hit_2pct}/{n_total})")
             else:
-                st.metric("3日以内勝率", "N/A")
+                st.metric("+2%到達率(5日)", "N/A")
         with col_k4:
-            if "5日以内プラス" in display_df.columns:
-                # NaNを0（未達）として全件で計算
-                _col_5d = display_df["5日以内プラス"].fillna(0)
-                n_win_5d = int((_col_5d == 1).sum())
-                win_rate_5d = n_win_5d / n_total * 100 if n_total > 0 else 0
-                st.metric("5日以内勝率", f"{win_rate_5d:.1f}% ({n_win_5d}/{n_total})")
+            _d2t_col = None
+            if "+2%到達日" in display_df.columns:
+                _d2t_col = display_df["+2%到達日"].dropna()
+            elif "到達日" in display_df.columns:
+                _d2t_col = display_df["到達日"].dropna()
+            if _d2t_col is not None and len(_d2t_col) > 0:
+                avg_days = _d2t_col.mean()
+                st.metric("平均到達日数", f"{avg_days:.1f}日 ({len(_d2t_col)}件)")
             else:
-                st.metric("5日以内勝率", "N/A")
+                st.metric("平均到達日数", "N/A")
 
         # ---- 日付ラベルでカラムをリネームしてから表示する ----
         date_labels = st.session_state.get("date_labels", {})
@@ -1090,11 +1091,12 @@ if "result_df" in st.session_state:
 
         # ---- カスタムHTMLテーブルを生成する ----
         # 表示列（銘柄コード・銘柄名・予測スコアは固定、残りを順番どおりに。内部変数_付きは除外）
-        skip_cols = {"銘柄コード", "銘柄名", "予測スコア", "AI予測(%)"}
-        # AI予測を先頭近くに固定表示
+        skip_cols = {"銘柄コード", "銘柄名", "予測スコア", "AI予測(%)", "回転スコア"}
+        # 固定表示列（先頭に配置）
         priority_cols = []
-        if "AI予測(%)" in display_df.columns:
-            priority_cols.append("AI予測(%)")
+        for pc in ["AI予測(%)", "回転スコア"]:
+            if pc in display_df.columns:
+                priority_cols.append(pc)
         other_cols = priority_cols + [c for c in display_df.columns if c not in skip_cols and not c.startswith("_") and c not in priority_cols]
 
         # ヘッダー
