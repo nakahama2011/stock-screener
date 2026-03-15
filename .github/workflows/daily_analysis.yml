@@ -1,17 +1,23 @@
-# 毎日取引終了後に特徴量分析を自動更新するワークフロー
-# 東証取引終了（15:00 JST）+ データ反映待ち → 16:30 JST（= 07:30 UTC）に実行
-name: 📊 特徴量分析 自動更新
+# 毎日取引終了後に自動で以下を実行するワークフロー:
+# 1. TradingViewスクリーニング結果を日次CSVで保存
+# 2. 累積データを更新
+# 3. MLモデルとフィルターランキングを再計算
+#
+# 東証取引終了（15:00 JST）+ データ反映待ち → 16:30 JST（= 07:30 UTC）
+# 米国市場終了（16:00 EST / 06:00 JST）+ 反映待ち → 08:00 JST（= 23:00 UTC前日）
+
+name: 📊 日次データ収集 & 分析更新
 
 on:
   schedule:
-    # 月〜金の 07:30 UTC（= 16:30 JST）に実行
+    # 月〜金の 07:30 UTC（= 16:30 JST）に実行（日本株メイン）
     - cron: '30 7 * * 1-5'
   workflow_dispatch:  # 手動実行も可能
 
 jobs:
-  update-analysis:
+  daily-collect:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 30
 
     steps:
       - name: 📥 コードをチェックアウト
@@ -26,13 +32,13 @@ jobs:
       - name: 📦 依存パッケージをインストール
         run: pip install -r requirements.txt
 
-      - name: 📊 全銘柄分析を実行
-        run: python analyze_features.py
+      - name: 📡 日次データ収集パイプライン実行
+        run: python daily_collect.py
 
       - name: 📤 結果をコミット＆プッシュ
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add results/top_combos.json results/feature_analysis_report.html
-          git diff --cached --quiet || git commit -m "📊 分析データ自動更新 $(TZ=Asia/Tokyo date '+%Y-%m-%d')"
+          git add results/ -A
+          git diff --cached --quiet || git commit -m "📊 日次データ自動収集 $(TZ=Asia/Tokyo date '+%Y-%m-%d')"
           git push
