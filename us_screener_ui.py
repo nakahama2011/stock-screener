@@ -429,6 +429,9 @@ def run_single_day_screen(
             f"翌日リターン(%)": fwd.get("cum_ret_1d"),
             "3日以内最大(%)": fwd.get("max_ret_3d"),
             "5日以内最大(%)": fwd.get("max_ret_5d"),
+            f"_hit_{hit_threshold_val:.0f}pct_1d": fwd.get(f"hit_{hit_threshold_val:.0f}pct_1d"),
+            f"_hit_{hit_threshold_val:.0f}pct_3d": fwd.get(f"hit_{hit_threshold_val:.0f}pct_3d"),
+            f"_hit_{hit_threshold_val:.0f}pct_5d": fwd.get(f"hit_{hit_threshold_val:.0f}pct_5d"),
             "+2%到達日": fwd.get("days_to_target"),
             # ---- スコアリング用内部フィールド ----
             "_weekly_sma20_ok":       screen_result.get("weekly_sma20_ok", False),
@@ -483,23 +486,41 @@ def run_single_day_screen(
             break
 
     # 表示する列と順序
-    hit_col_name = "翌日リターン(%)"
     display_cols = [
-        "🏆TOP該当",
         "ティッカー", "銘柄名",
+        "AI予測(%)",
+        "🏆TOP該当",
+        "+2%到達日",
+        "翌日到達",
+        "3日目到達",
+        "5日目到達",
         "前々日(%)", "前日(%)", "当日(%)",
         "明日(%)", "明後日(%)", "3日後(%)", "4日後(%)", "5日後(%)",
-        hit_col_name, "3日以内最大(%)", "5日以内最大(%)", "+2%到達日",
-        "AI予測(%)",
-        "出来高", "出来高増減(%)",
-        "出来高比(20MA)", "ATR%",
+        "出来高",
         "RSI(14)",
+        "ATR%",
     ]
     score_internal_cols = [c for c in result_df.columns if c.startswith("_")]
+
+    # 翌日到達・3日目到達・5日目到達 列を作成（○/✕）
+    hit_1d_col = f"_hit_{hit_threshold_val:.0f}pct_1d"
+    hit_3d_col = f"_hit_{hit_threshold_val:.0f}pct_3d"
+    hit_5d_col = f"_hit_{hit_threshold_val:.0f}pct_5d"
+    if hit_1d_col in result_df.columns:
+        result_df["翌日到達"] = result_df[hit_1d_col].apply(
+            lambda x: "○" if x == 1 else "✕" if pd.notna(x) else "")
+    if hit_3d_col in result_df.columns:
+        result_df["3日目到達"] = result_df[hit_3d_col].apply(
+            lambda x: "○" if x == 1 else "✕" if pd.notna(x) else "")
+    if hit_5d_col in result_df.columns:
+        result_df["5日目到達"] = result_df[hit_5d_col].apply(
+            lambda x: "○" if x == 1 else "✕" if pd.notna(x) else "")
+
     existing = [c for c in display_cols if c in result_df.columns] + score_internal_cols
     result_df = result_df[existing]
 
-    result_df = result_df.sort_values("到達日", ascending=True, na_position="last") if "到達日" in result_df.columns else result_df
+    # AI予測(%)列は後段で計算されるため、ここではティッカー順で返す
+    result_df = result_df.sort_values("ティッカー", ascending=True, na_position="last")
     return result_df, "", date_labels
 
 
@@ -547,7 +568,7 @@ if "us_result_df" in st.session_state:
         date_label = datetime.strptime(as_of_str, "%Y-%m-%d").strftime("%Y年%m月%d日")
         st.markdown(f"## 📋 {date_label} の米国株スクリーニング結果")
 
-        hit_col = "翌日リターン(%)"
+        hit_thr_val = saved_hit_thr
 
         # =====================================================
         # フィルタ・ソート・検索
@@ -581,7 +602,7 @@ if "us_result_df" in st.session_state:
         with col_f2:
             sort_col = st.selectbox(
                 "並び順",
-                ["AI予測（降順）", "回転スコア（降順）", "+2%到達日（昇順）", "明日（降順）", "明日（昇順）", "出来高（降順）", "ティッカー"],
+                ["AI予測（降順）", "+2%到達日（昇順）", "明日（降順）", "明日（昇順）", "出来高（降順）", "ティッカー"],
                 key="us_sort_col",
             )
         with col_f3:
@@ -809,7 +830,7 @@ if "us_result_df" in st.session_state:
                 display_df = display_df[display_df["_first_sma20_touch"] == True]
 
         # ソート
-        if sort_col == "AI予測（降順）":
+        if sort_col == "AI予測（降順）" and "AI予測(%)" in display_df.columns:
             display_df = display_df.sort_values("AI予測(%)", ascending=False, na_position="last")
         elif sort_col == "回転スコア（降順）":
             display_df = display_df.sort_values("回転スコア", ascending=False, na_position="last")
@@ -883,6 +904,12 @@ if "us_result_df" in st.session_state:
                 v = float(val)
                 is_nan = _math.isnan(v)
             except (TypeError, ValueError):
+                # ○/✕ 表示列
+                if col in ["翌日到達", "3日目到達", "5日目到達"]:
+                    if val == "○":
+                        return "○", "color:#10b981;font-weight:bold;text-align:center"
+                    elif val == "✕":
+                        return "✕", "color:#ef4444;text-align:center"
                 return "—", ""
 
             if is_nan:
@@ -1064,6 +1091,12 @@ if "us_result_df" in st.session_state:
                 other_cells += f"<td{style_attr}>{text}</td>"
 
             rows_html += f"<tr>{code_cell}{name_cell}{other_cells}</tr>\n"
+
+        # 凡例
+        st.caption(
+            f"📌 **日次リターン（%）= 終値ベース**（前日終値→当日終値の騰落率）　"
+            f"| **到達判定（○/✕）・到達日 = 高値ベース**（日中の高値が+{saved_hit_thr:.0f}%指値に到達したか）"
+        )
 
         n_rows = len(display_df)
         table_height = min(max(n_rows * 42 + 60, 200), 600)
