@@ -429,11 +429,14 @@ def run_single_day_screen(
             "3日後(%)": fwd.get("ret_3d"),
             "4日後(%)": fwd.get("ret_4d"),
             "5日後(%)": fwd.get("ret_5d"),
-            # ―― +2%到達関連 ――
+            # ―― +3%到達関連 ――
             f"+{hit_threshold_val:.0f}%到達(5日)": hit_5d_val,
             "3日以内最大(%)": fwd.get("max_ret_3d"),
             "5日以内最大(%)": fwd.get("max_ret_5d"),
-            "+2%到達日": fwd.get("days_to_target"),
+            f"_hit_{hit_threshold_val:.0f}pct_1d": fwd.get(f"hit_{hit_threshold_val:.0f}pct_1d"),
+            f"_hit_{hit_threshold_val:.0f}pct_3d": fwd.get(f"hit_{hit_threshold_val:.0f}pct_3d"),
+            f"_hit_{hit_threshold_val:.0f}pct_5d": fwd.get(f"hit_{hit_threshold_val:.0f}pct_5d"),
+            "+3%到達日": fwd.get("days_to_target"),
             # ―― 出来高・ボラ ――
             "出来高": screen_result["volume"],
             "出来高増減(%)": screen_result.get("volume_change_pct"),
@@ -503,22 +506,41 @@ def run_single_day_screen(
     # 表示する列と順序を定義する
     hit_col_name = f"+{hit_threshold_val:.0f}%到達(5日)"
     display_cols = [
-        "🏆TOP該当",
         "銘柄コード", "銘柄名",
-        "前々日(%)", "前日(%)", "当日(%)",
-        "明日(%)", "明後日(%)", "3日後(%)", "4日後(%)", "5日後(%)",
-        hit_col_name, "3日以内最大(%)", "5日以内最大(%)", "+2%到達日",
         "AI予測(%)",
-        "出来高", "出来高増減(%)",
-        "出来高比(20MA)", "ATR%",
+        "🏆TOP該当",
+        "+3%到達日",
+        "翌日到達",                     # 翌日の高値が+3%以上か
+        "3日目到達",                    # 3日以内の高値が+3%以上か
+        "5日目到達",                    # 5日以内の高値が+3%以上か
+        "前々日(%)", "前日(%)", "当日(%)",  # 過去日次リターン
+        "明日(%)", "明後日(%)", "3日後(%)", "4日後(%)", "5日後(%)",  # 将来日次リターン
+        "出来高",
         "RSI(14)",
+        "ATR%",
     ]
     # スコアリング用の内部列（_ プレフィックス）も一緒に保持する
     score_internal_cols = [c for c in result_df.columns if c.startswith("_")]
+
+    # 翌日到達・3日目到達・5日目到達 列を作成（○/✕）
+    hit_1d_col = f"_hit_{hit_threshold_val:.0f}pct_1d"
+    hit_3d_col = f"_hit_{hit_threshold_val:.0f}pct_3d"
+    hit_5d_col = f"_hit_{hit_threshold_val:.0f}pct_5d"
+    if hit_1d_col in result_df.columns:
+        result_df["翌日到達"] = result_df[hit_1d_col].apply(
+            lambda x: "○" if x == 1 else "✕" if pd.notna(x) else "")
+    if hit_3d_col in result_df.columns:
+        result_df["3日目到達"] = result_df[hit_3d_col].apply(
+            lambda x: "○" if x == 1 else "✕" if pd.notna(x) else "")
+    if hit_5d_col in result_df.columns:
+        result_df["5日目到達"] = result_df[hit_5d_col].apply(
+            lambda x: "○" if x == 1 else "✕" if pd.notna(x) else "")
+
+    # 既存列だけ抽出
     existing = [c for c in display_cols if c in result_df.columns] + score_internal_cols
     result_df = result_df[existing]
 
-    result_df = result_df.sort_values("明日(%)", ascending=False, na_position="last")
+    result_df = result_df.sort_values("AI予測(%)", ascending=False, na_position="last")
     return result_df, "", date_labels
 
 
@@ -736,8 +758,8 @@ if "result_df" in st.session_state:
         display_df["回転スコア"] = display_df.apply(_calc_rotation_score, axis=1)
 
         # 到達日列のリネーム
-        if "+2%到達日" in display_df.columns:
-            display_df["到達日"] = display_df["+2%到達日"]
+        if "+3%到達日" in display_df.columns:
+            display_df["到達日"] = display_df["+3%到達日"]
 
         # ---- AI予測確率の計算（日本株専用モデル） ----
         try:
@@ -951,8 +973,8 @@ if "result_df" in st.session_state:
             display_df = display_df.sort_values("AI予測(%)", ascending=False, na_position="last")
         elif sort_col == "回転スコア（降順）":
             display_df = display_df.sort_values("回転スコア", ascending=False, na_position="last")
-        elif sort_col == "到達日（昇順）" and "+2%到達日" in display_df.columns:
-            display_df = display_df.sort_values("+2%到達日", ascending=True, na_position="last")
+        elif sort_col == "到達日（昇順）" and "+3%到達日" in display_df.columns:
+            display_df = display_df.sort_values("+3%到達日", ascending=True, na_position="last")
         elif sort_col == "明日（降順）":
             display_df = display_df.sort_values("明日(%)", ascending=False, na_position="last")
         elif sort_col == "明日（昇順）":
@@ -988,8 +1010,8 @@ if "result_df" in st.session_state:
                 st.metric(f"+{saved_hit_thr:.0f}%到達率(5日)", "N/A")
         with col_k4:
             _d2t_col = None
-            if "+2%到達日" in display_df.columns:
-                _d2t_col = display_df["+2%到達日"].dropna()
+            if "+3%到達日" in display_df.columns:
+                _d2t_col = display_df["+3%到達日"].dropna()
             elif "到達日" in display_df.columns:
                 _d2t_col = display_df["到達日"].dropna()
             if _d2t_col is not None and len(_d2t_col) > 0:
@@ -1023,6 +1045,12 @@ if "result_df" in st.session_state:
                 v = float(val)
                 is_nan = _math.isnan(v)
             except (TypeError, ValueError):
+                # ○/✕ 表示列
+                if col in ["翌日到達", "3日目到達", "5日目到達"]:
+                    if val == "○":
+                        return "○", "color:#10b981;font-weight:bold;text-align:center"
+                    elif val == "✕":
+                        return "✕", "color:#ef4444;text-align:center"
                 return "—", ""
 
             if is_nan:
@@ -1063,8 +1091,8 @@ if "result_df" in st.session_state:
                     return pct_str, "background:rgba(239,68,68,0.15);color:#ef4444"
                 return pct_str, ""
 
-            # +2%到達日
-            if col in ["+2%到達日", "到達日"]:
+            # +3%到達日
+            if col in ["+3%到達日", "到達日"]:
                 d = int(v)
                 if d == 1:
                     return f"🎯{d}日目", "background:rgba(234,179,8,0.25);color:#eab308;font-weight:bold"
