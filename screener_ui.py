@@ -409,31 +409,42 @@ def run_single_day_screen(
             continue
 
         fwd = calc_forward_returns(df, signal_ts, hit_threshold_val)
+
+        # hit_2pct_5d を判定（5日以内の高値が+2%以上）
+        hit_5d_val = None
+        max_5d = fwd.get("max_ret_5d")
+        if max_5d is not None:
+            hit_5d_val = 1 if max_5d >= hit_threshold_val else 0
+
         rows.append({
             "銘柄コード": code,
             "銘柄名": name,
-            "終値": screen_result["close"],
+            # ―― 過去の値動き ――
             "前々日(%)": screen_result.get("prev_prev_day_change_pct"),
             "前日(%)": screen_result.get("prev_day_change_pct"),
             "当日(%)": screen_result.get("day_change_pct"),
-            "RSI(14)": screen_result.get("rsi"),
-            "SMA5": screen_result["sma5"],
-            "SMA20": screen_result["sma20"],
-            "SMA60": screen_result["sma60"],
-            "出来高": screen_result["volume"],
-            "出来高比(20MA)": screen_result["volume_ratio"],
-            "出来高増減(%)": screen_result.get("volume_change_pct"),
+            # ―― 将来の値動き ――
             "明日(%)": fwd.get("ret_1d"),
             "明後日(%)": fwd.get("ret_2d"),
             "3日後(%)": fwd.get("ret_3d"),
             "4日後(%)": fwd.get("ret_4d"),
             "5日後(%)": fwd.get("ret_5d"),
-            "翌日リターン(%)": fwd.get("cum_ret_1d"),
+            # ―― +2%到達関連 ――
+            f"+{hit_threshold_val:.0f}%到達(5日)": hit_5d_val,
             "3日以内最大(%)": fwd.get("max_ret_3d"),
             "5日以内最大(%)": fwd.get("max_ret_5d"),
             "+2%到達日": fwd.get("days_to_target"),
+            # ―― 出来高・ボラ ――
+            "出来高": screen_result["volume"],
+            "出来高増減(%)": screen_result.get("volume_change_pct"),
+            "出来高比(20MA)": screen_result["volume_ratio"],
             "ATR%": screen_result.get("atr_pct"),
-            # ---- スコアリング用内部フィールド（テーブル非表示）----
+            "RSI(14)": screen_result.get("rsi"),
+            # ―― スコアリング用内部フィールド ――
+            "_close": screen_result["close"],
+            "_sma5": screen_result["sma5"],
+            "_sma20": screen_result["sma20"],
+            "_sma60": screen_result["sma60"],
             "_weekly_sma20_ok":       screen_result.get("weekly_sma20_ok", False),
             "_vol_today_vs_yday_pct": screen_result.get("vol_today_vs_yday_pct"),
             "_is_pullback":           screen_result.get("is_pullback", False),
@@ -490,16 +501,16 @@ def run_single_day_screen(
             break
 
     # 表示する列と順序を定義する
-    hit_col_name = f"+{hit_threshold_val:.0f}%達成(明日)"
+    hit_col_name = f"+{hit_threshold_val:.0f}%到達(5日)"
     display_cols = [
         "🏆TOP該当",
         "銘柄コード", "銘柄名",
         "前々日(%)", "前日(%)", "当日(%)",
         "明日(%)", "明後日(%)", "3日後(%)", "4日後(%)", "5日後(%)",
-        hit_col_name,
-        "3日以内プラス", "5日以内プラス",
+        hit_col_name, "3日以内最大(%)", "5日以内最大(%)", "+2%到達日",
+        "AI予測(%)",
         "出来高", "出来高増減(%)",
-        "出来高比(20MA)",
+        "出来高比(20MA)", "ATR%",
         "RSI(14)",
     ]
     # スコアリング用の内部列（_ プレフィックス）も一緒に保持する
@@ -559,7 +570,7 @@ if "result_df" in st.session_state:
         st.markdown(f"## 📋 {date_label} のスクリーニング結果")
 
         # ---- KPIサマリー（フィルタ後のデータで計算するため、後で描画） ----
-        hit_col = f"+{saved_hit_thr:.0f}%達成(明日)"
+        hit_col = f"+{saved_hit_thr:.0f}%到達(5日)"
 
         # =====================================================
         # ▼ フィルタ・ソート・検索  ← session_state で状態保持
@@ -1005,8 +1016,16 @@ if "result_df" in st.session_state:
                     style = ""
                 return pct_str, style
 
-            # 翌日リターン・3/5日以内最大(%)
-            if col in ["翌日リターン(%)", "3日以内最大(%)", "5日以内最大(%)"]:
+            # +2%到達(5日) フラグ表示
+            if "到達(5日)" in col:
+                if v == 1:
+                    return "✅ 到達", "background:rgba(16,185,129,0.2);color:#10b981;font-weight:bold"
+                elif v == 0:
+                    return "✗", "background:rgba(239,68,68,0.1);color:#ef4444"
+                return "—", ""
+
+            # 3/5日以内最大(%)
+            if col in ["3日以内最大(%)", "5日以内最大(%)"]:
                 pct_str = f"{v:+.2f}%"
                 if v >= 2.0:
                     return pct_str, "background:rgba(16,185,129,0.25);color:#10b981;font-weight:bold"
