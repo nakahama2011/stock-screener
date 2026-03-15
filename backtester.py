@@ -424,16 +424,19 @@ def screen_at_date(
         "atr_pct":               None,  # 後で計算
     }
 
-    # ATR(14)% 計算
-    if "High" in past_df.columns and "Low" in past_df.columns and len(past_df) >= 15:
+    # ATR(14)% 計算（列名の大文字/小文字両対応）
+    high_col = "High" if "High" in past_df.columns else ("high" if "high" in past_df.columns else None)
+    low_col = "Low" if "Low" in past_df.columns else ("low" if "low" in past_df.columns else None)
+    close_col = "Close" if "Close" in past_df.columns else ("close" if "close" in past_df.columns else None)
+    if high_col and low_col and close_col and len(past_df) >= 15:
         tr = pd.concat([
-            past_df["High"] - past_df["Low"],
-            (past_df["High"] - past_df["Close"].shift(1)).abs(),
-            (past_df["Low"] - past_df["Close"].shift(1)).abs(),
+            past_df[high_col] - past_df[low_col],
+            (past_df[high_col] - past_df[close_col].shift(1)).abs(),
+            (past_df[low_col] - past_df[close_col].shift(1)).abs(),
         ], axis=1).max(axis=1)
         atr14 = tr.rolling(14).mean().iloc[-1]
         if not pd.isna(atr14) and close > 0:
-            result_dict["atr_pct"] = round(float(atr14) / close * 100, 2)
+            result_dict["atr_pct"] = round(abs(float(atr14)) / close * 100, 2)
 
     return result_dict
 
