@@ -742,7 +742,10 @@ if "result_df" in st.session_state:
             return score
 
         display_df = display_df.copy()
-        display_df["予測スコア"] = display_df.apply(_calc_score, axis=1)
+        if display_df.empty:
+            display_df["予測スコア"] = 0
+        else:
+            display_df["予測スコア"] = display_df.apply(_calc_score, axis=1)
 
         # ---- 回転スコア計算（米国株と同じロジック） ----
         def _calc_rotation_score(row):
@@ -776,7 +779,10 @@ if "result_df" in st.session_state:
             if row.get("_is_high_zone"): score -= 10
             return max(score, 0)
 
-        display_df["回転スコア"] = display_df.apply(_calc_rotation_score, axis=1)
+        if display_df.empty:
+            display_df["回転スコア"] = 0
+        else:
+            display_df["回転スコア"] = display_df.apply(_calc_rotation_score, axis=1)
 
         # 到達日列のリネーム
         if "+3%到達日" in display_df.columns:
@@ -817,7 +823,10 @@ if "result_df" in st.session_state:
                     except:
                         return None
 
-                display_df["AI予測(%)"] = display_df.apply(_predict_jp, axis=1)
+                if display_df.empty:
+                    display_df["AI予測(%)"] = None
+                else:
+                    display_df["AI予測(%)"] = display_df.apply(_predict_jp, axis=1)
             else:
                 display_df["AI予測(%)"] = None
         except Exception:
@@ -915,7 +924,10 @@ if "result_df" in st.session_state:
                             break
                 return " ".join(matched) if matched else ""
 
-            display_df["🏆TOP該当"] = display_df.apply(_match_top_combos, axis=1)
+            if display_df.empty:
+                display_df["🏆TOP該当"] = ""
+            else:
+                display_df["🏆TOP該当"] = display_df.apply(_match_top_combos, axis=1)
             # 🏆TOP該当列を一番左に配置する
             cols = display_df.columns.tolist()
             if "🏆TOP該当" in cols:
