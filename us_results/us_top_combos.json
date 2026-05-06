@@ -2,7 +2,7 @@
   "combos_5d": [
     {
       "conditions": "前日陽線 + 長大上ヒゲ + 火〜木曜",
-      "count": 35,
+      "count": 34,
       "win_rate": 100.0,
       "n_conditions": 3
     },
@@ -14,19 +14,19 @@
     },
     {
       "conditions": "前日陰線 + 押し目(プルバック) + 高値圏(20日HH 3%以内)",
-      "count": 29,
-      "win_rate": 100.0,
-      "n_conditions": 3
-    },
-    {
-      "conditions": "RSI 30-50 + 前日陽線 + 週足SMA20上抜け",
-      "count": 23,
+      "count": 28,
       "win_rate": 100.0,
       "n_conditions": 3
     },
     {
       "conditions": "当日陰線 + 前日陰線 + 高値圏(20日HH 3%以内)",
-      "count": 23,
+      "count": 22,
+      "win_rate": 100.0,
+      "n_conditions": 3
+    },
+    {
+      "conditions": "RSI 30-50 + 前日陽線 + 週足SMA20上抜け",
+      "count": 21,
       "win_rate": 100.0,
       "n_conditions": 3
     },
@@ -80,44 +80,44 @@
     },
     {
       "conditions": "出来高比≥1.5 + 当日陽線 + 火〜木曜",
-      "count": 68,
+      "count": 66,
       "win_rate": 98.5,
       "n_conditions": 3
     },
     {
       "conditions": "出来高比≥1.5 + 前日陽線 + 押し目(プルバック)",
-      "count": 62,
+      "count": 61,
       "win_rate": 98.4,
       "n_conditions": 3
     },
     {
       "conditions": "RSI 30-50 + 前日陽線",
-      "count": 53,
-      "win_rate": 98.1,
+      "count": 48,
+      "win_rate": 97.9,
+      "n_conditions": 2
+    },
+    {
+      "conditions": "前日陽線 + 長大上ヒゲ",
+      "count": 48,
+      "win_rate": 97.9,
       "n_conditions": 2
     },
     {
       "conditions": "RSI 30-50 + 出来高比≥1.2 + 前日陽線",
-      "count": 53,
-      "win_rate": 98.1,
+      "count": 48,
+      "win_rate": 97.9,
       "n_conditions": 3
     },
     {
       "conditions": "RSI 30-50 + 当日陰線 + 前日陽線",
-      "count": 53,
-      "win_rate": 98.1,
+      "count": 48,
+      "win_rate": 97.9,
       "n_conditions": 3
     },
     {
-      "conditions": "前日陽線 + 長大上ヒゲ",
-      "count": 49,
-      "win_rate": 98.0,
-      "n_conditions": 2
-    },
-    {
       "conditions": "出来高比≥1.2 + 前日陽線 + 長大上ヒゲ",
-      "count": 49,
-      "win_rate": 98.0,
+      "count": 48,
+      "win_rate": 97.9,
       "n_conditions": 3
     },
     {
@@ -128,32 +128,14 @@
     },
     {
       "conditions": "RSI 30-50 + 出来高比≥1.5 + 週足SMA20上抜け",
-      "count": 42,
-      "win_rate": 97.6,
+      "count": 45,
+      "win_rate": 97.8,
       "n_conditions": 3
     },
     {
       "conditions": "出来高比≥1.5 + 前日陰線 + 高値圏(20日HH 3%以内)",
-      "count": 42,
+      "count": 41,
       "win_rate": 97.6,
-      "n_conditions": 3
-    },
-    {
-      "conditions": "前日陰線 + 高値圏(20日HH 3%以内)",
-      "count": 118,
-      "win_rate": 97.5,
-      "n_conditions": 2
-    },
-    {
-      "conditions": "RSI 50-65 + 前日陰線 + 高値圏(20日HH 3%以内)",
-      "count": 118,
-      "win_rate": 97.5,
-      "n_conditions": 3
-    },
-    {
-      "conditions": "出来高比≥1.2 + 前日陰線 + 高値圏(20日HH 3%以内)",
-      "count": 118,
-      "win_rate": 97.5,
       "n_conditions": 3
     },
     {
@@ -175,17 +157,47 @@
       "n_conditions": 3
     },
     {
+      "conditions": "RSI 50-65 + 長大上ヒゲ + 週足SMA20上抜け",
+      "count": 39,
+      "win_rate": 97.4,
+      "n_conditions": 3
+    },
+    {
       "conditions": "出来高比≥1.5 + 当日陽線 + 前日陰線",
-      "count": 75,
+      "count": 74,
       "win_rate": 97.3,
       "n_conditions": 3
+    },
+    {
+      "conditions": "前日陰線 + 高値圏(20日HH 3%以内) + 火〜木曜",
+      "count": 71,
+      "win_rate": 97.2,
+      "n_conditions": 3
+    },
+    {
+      "conditions": "出来高比≥1.5 + 当日陽線",
+      "count": 132,
+      "win_rate": 97.0,
+      "n_conditions": 2
     }
   ],
   "combos_2pct": [
     {
+      "conditions": "押し目(プルバック) + 長大上ヒゲ + 火〜木曜",
+      "count": 18,
+      "win_rate": 44.4,
+      "n_conditions": 3
+    },
+    {
       "conditions": "RSI 30-50 + 前日陰線 + 長大上ヒゲ",
-      "count": 13,
-      "win_rate": 38.5,
+      "count": 14,
+      "win_rate": 42.9,
+      "n_conditions": 3
+    },
+    {
+      "conditions": "当日陰線 + 押し目(プルバック) + 長大上ヒゲ",
+      "count": 24,
+      "win_rate": 37.5,
       "n_conditions": 3
     },
     {
@@ -201,15 +213,45 @@
       "n_conditions": 3
     },
     {
+      "conditions": "前日陰線 + 押し目(プルバック) + 長大上ヒゲ",
+      "count": 22,
+      "win_rate": 36.4,
+      "n_conditions": 3
+    },
+    {
+      "conditions": "前日陰線 + 長大上ヒゲ + 週足SMA20上抜け",
+      "count": 25,
+      "win_rate": 36.0,
+      "n_conditions": 3
+    },
+    {
       "conditions": "当日陽線 + 長大上ヒゲ + 週足SMA20上抜け",
       "count": 14,
       "win_rate": 35.7,
       "n_conditions": 3
     },
     {
-      "conditions": "押し目(プルバック) + 長大上ヒゲ + 火〜木曜",
-      "count": 17,
-      "win_rate": 35.3,
+      "conditions": "押し目(プルバック) + 長大上ヒゲ + 週足SMA20上抜け",
+      "count": 14,
+      "win_rate": 35.7,
+      "n_conditions": 3
+    },
+    {
+      "conditions": "押し目(プルバック) + 長大上ヒゲ",
+      "count": 31,
+      "win_rate": 35.5,
+      "n_conditions": 2
+    },
+    {
+      "conditions": "RSI 50-65 + 押し目(プルバック) + 長大上ヒゲ",
+      "count": 31,
+      "win_rate": 35.5,
+      "n_conditions": 3
+    },
+    {
+      "conditions": "出来高比≥1.2 + 押し目(プルバック) + 長大上ヒゲ",
+      "count": 31,
+      "win_rate": 35.5,
       "n_conditions": 3
     },
     {
@@ -219,14 +261,14 @@
       "n_conditions": 3
     },
     {
-      "conditions": "当日陽線 + 前日陰線 + 長大上ヒゲ",
-      "count": 23,
-      "win_rate": 34.8,
+      "conditions": "RSI 30-50 + 出来高比≥1.5 + 前日陰線",
+      "count": 75,
+      "win_rate": 34.7,
       "n_conditions": 3
     },
     {
-      "conditions": "RSI 30-50 + 出来高比≥1.5 + 前日陽線",
-      "count": 36,
+      "conditions": "当日陰線 + 前日陰線 + 長大上ヒゲ",
+      "count": 33,
       "win_rate": 33.3,
       "n_conditions": 3
     },
@@ -237,27 +279,33 @@
       "n_conditions": 3
     },
     {
-      "conditions": "押し目(プルバック) + 長大上ヒゲ + 週足SMA20上抜け",
-      "count": 12,
-      "win_rate": 33.3,
-      "n_conditions": 3
+      "conditions": "前日陰線 + 長大上ヒゲ",
+      "count": 55,
+      "win_rate": 32.7,
+      "n_conditions": 2
     },
     {
-      "conditions": "RSI 30-50 + 前日陽線 + 火〜木曜",
-      "count": 34,
-      "win_rate": 32.4,
+      "conditions": "出来高比≥1.2 + 前日陰線 + 長大上ヒゲ",
+      "count": 55,
+      "win_rate": 32.7,
       "n_conditions": 3
     },
     {
       "conditions": "RSI 30-50 + 出来高比≥1.5",
-      "count": 110,
-      "win_rate": 31.8,
+      "count": 108,
+      "win_rate": 32.4,
       "n_conditions": 2
     },
     {
       "conditions": "RSI 30-50 + 出来高比≥1.2 + 出来高比≥1.5",
-      "count": 110,
-      "win_rate": 31.8,
+      "count": 108,
+      "win_rate": 32.4,
+      "n_conditions": 3
+    },
+    {
+      "conditions": "RSI 30-50 + 出来高比≥1.5 + 当日陰線",
+      "count": 102,
+      "win_rate": 32.4,
       "n_conditions": 3
     },
     {
@@ -267,107 +315,59 @@
       "n_conditions": 3
     },
     {
-      "conditions": "RSI 30-50 + 出来高比≥1.5 + 当日陰線",
-      "count": 104,
-      "win_rate": 31.7,
-      "n_conditions": 3
-    },
-    {
-      "conditions": "RSI 30-50 + 出来高比≥1.5 + 前日陰線",
-      "count": 74,
-      "win_rate": 31.1,
-      "n_conditions": 3
-    },
-    {
-      "conditions": "当日陰線 + 押し目(プルバック) + 長大上ヒゲ",
-      "count": 23,
-      "win_rate": 30.4,
-      "n_conditions": 3
-    },
-    {
-      "conditions": "前日陰線 + 長大上ヒゲ + 週足SMA20上抜け",
-      "count": 23,
-      "win_rate": 30.4,
+      "conditions": "当日陽線 + 前日陰線 + 長大上ヒゲ",
+      "count": 22,
+      "win_rate": 31.8,
       "n_conditions": 3
     },
     {
       "conditions": "RSI 30-50 + 出来高比≥1.5 + 火〜木曜",
-      "count": 73,
-      "win_rate": 30.1,
+      "count": 71,
+      "win_rate": 31.0,
       "n_conditions": 3
     },
     {
-      "conditions": "押し目(プルバック) + 長大上ヒゲ",
-      "count": 30,
-      "win_rate": 30.0,
+      "conditions": "当日陰線 + 長大上ヒゲ",
+      "count": 62,
+      "win_rate": 30.6,
       "n_conditions": 2
     },
     {
-      "conditions": "RSI 50-65 + 押し目(プルバック) + 長大上ヒゲ",
-      "count": 30,
-      "win_rate": 30.0,
-      "n_conditions": 3
-    },
-    {
-      "conditions": "出来高比≥1.2 + 押し目(プルバック) + 長大上ヒゲ",
-      "count": 30,
-      "win_rate": 30.0,
-      "n_conditions": 3
-    },
-    {
-      "conditions": "出来高比≥1.5 + 当日陽線 + 週足SMA20上抜け",
-      "count": 47,
-      "win_rate": 29.8,
-      "n_conditions": 3
-    },
-    {
-      "conditions": "前日陰線 + 長大上ヒゲ",
-      "count": 54,
-      "win_rate": 29.6,
-      "n_conditions": 2
-    },
-    {
-      "conditions": "出来高比≥1.2 + 前日陰線 + 長大上ヒゲ",
-      "count": 54,
-      "win_rate": 29.6,
-      "n_conditions": 3
-    },
-    {
-      "conditions": "出来高比≥1.5 + 当日陰線 + 高値圏(20日HH 3%以内)",
-      "count": 34,
-      "win_rate": 29.4,
-      "n_conditions": 3
-    },
-    {
-      "conditions": "当日陽線 + 前日大陰線 + 週足SMA20上抜け",
-      "count": 17,
-      "win_rate": 29.4,
+      "conditions": "出来高比≥1.2 + 当日陰線 + 長大上ヒゲ",
+      "count": 62,
+      "win_rate": 30.6,
       "n_conditions": 3
     },
     {
       "conditions": "前日大陰線 + 週足SMA20上抜け + 火〜木曜",
-      "count": 31,
-      "win_rate": 29.0,
+      "count": 33,
+      "win_rate": 30.3,
       "n_conditions": 3
     },
     {
-      "conditions": "前日陰線 + 押し目(プルバック) + 長大上ヒゲ",
-      "count": 21,
-      "win_rate": 28.6,
+      "conditions": "RSI 50-65 + 当日陰線 + 長大上ヒゲ",
+      "count": 50,
+      "win_rate": 30.0,
       "n_conditions": 3
     },
     {
-      "conditions": "出来高比≥1.5 + 当日陽線 + 長大上ヒゲ",
-      "count": 14,
-      "win_rate": 28.6,
+      "conditions": "当日陰線 + 長大上ヒゲ + 火〜木曜",
+      "count": 40,
+      "win_rate": 30.0,
+      "n_conditions": 3
+    },
+    {
+      "conditions": "長大上ヒゲ + 週足SMA20上抜け + 火〜木曜",
+      "count": 27,
+      "win_rate": 29.6,
       "n_conditions": 3
     }
   ],
   "overall": {
-    "total_signals": 1014,
-    "win_rate_5d": 94.7,
-    "win_rate_3d": 93.9,
-    "period": "2026-01-28 〜 2026-04-28",
-    "next_day_2pct_rate": 20.7
+    "total_signals": 1009,
+    "win_rate_5d": 94.4,
+    "win_rate_3d": 93.6,
+    "period": "2026-01-29 〜 2026-04-29",
+    "next_day_2pct_rate": 21.2
   }
 }
