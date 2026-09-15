@@ -145,12 +145,6 @@
       "n_conditions": 3
     },
     {
-      "conditions": "RSI 30-50 + 出来高比≥1.5 + 火〜木曜",
-      "count": 94,
-      "win_rate": 97.9,
-      "n_conditions": 3
-    },
-    {
       "conditions": "当日陽線 + 前日陰線 + 長大上ヒゲ",
       "count": 48,
       "win_rate": 97.9,
@@ -178,6 +172,12 @@
       "conditions": "出来高比≥1.5 + 前日大陰線 + 火〜木曜",
       "count": 40,
       "win_rate": 97.5,
+      "n_conditions": 3
+    },
+    {
+      "conditions": "出来高比≥1.5 + 当日陽線 + 長大上ヒゲ",
+      "count": 38,
+      "win_rate": 97.4,
       "n_conditions": 3
     }
   ],
