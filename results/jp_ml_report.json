@@ -1,84 +1,80 @@
 {
   "feature_importance": [
     {
-      "name": "sma5_dist_pct",
-      "importance": 0.1031
-    },
-    {
-      "name": "volume_change_pct",
-      "importance": 0.0966
+      "name": "vol_today_vs_yday_pct",
+      "importance": 0.1009
     },
     {
       "name": "sma60_dist_pct",
-      "importance": 0.0886
+      "importance": 0.0973
+    },
+    {
+      "name": "price_range_pct",
+      "importance": 0.094
     },
     {
       "name": "prev_prev_day_change_pct",
-      "importance": 0.0809
+      "importance": 0.0932
+    },
+    {
+      "name": "volume_change_pct",
+      "importance": 0.0852
     },
     {
       "name": "volume_ratio",
       "importance": 0.0792
     },
     {
-      "name": "price_range_pct",
-      "importance": 0.0732
-    },
-    {
-      "name": "prev_day_change_pct",
-      "importance": 0.0682
-    },
-    {
-      "name": "vol_today_vs_yday_pct",
-      "importance": 0.0678
-    },
-    {
-      "name": "trend_start_days_ago",
-      "importance": 0.0664
-    },
-    {
       "name": "rsi",
-      "importance": 0.0649
-    },
-    {
-      "name": "day_change_pct",
-      "importance": 0.0599
+      "importance": 0.0778
     },
     {
       "name": "sma20_dist_pct",
-      "importance": 0.0516
+      "importance": 0.0744
+    },
+    {
+      "name": "sma5_dist_pct",
+      "importance": 0.065
+    },
+    {
+      "name": "trend_start_days_ago",
+      "importance": 0.0578
+    },
+    {
+      "name": "prev_day_change_pct",
+      "importance": 0.0537
+    },
+    {
+      "name": "day_change_pct",
+      "importance": 0.0486
     },
     {
       "name": "weekly_sma20_ok",
-      "importance": 0.0385
-    },
-    {
-      "name": "day_of_week",
-      "importance": 0.0287
+      "importance": 0.0259
     },
     {
       "name": "sma20_touch_count",
-      "importance": 0.014
+      "importance": 0.022
+    },
+    {
+      "name": "day_of_week",
+      "importance": 0.0142
     },
     {
       "name": "long_upper_wick",
-      "importance": 0.0075
+      "importance": 0.0049
     },
     {
       "name": "first_sma20_touch",
-      "importance": 0.0068
-    },
-    {
-      "name": "is_high_zone",
-      "importance": 0.0021
+      "importance": 0.0044
     },
     {
       "name": "is_pullback",
-      "importance": 0.0015
+      "importance": 0.001
     },
     {
-      "name": "big_bearish_yesterday",
-      "importance": 0.0005
+      "name": "is_high_zone",
+      "importance": 0.0006
     },
     {
       "name": "atr_pct",
@@ -86,6 +82,10 @@
     },
     {
       "name": "is_breakout",
+      "importance": 0.0
+    },
+    {
+      "name": "big_bearish_yesterday",
       "importance": 0.0
     }
   ],
@@ -113,8 +113,8 @@
     "trend_start_days_ago",
     "day_of_week"
   ],
-  "n_samples": 1253,
-  "auc": 0.655,
+  "n_samples": 1149,
+  "auc": 0.543,
   "target": "+3%到達(5日以内高値ベース)",
-  "updated_at": "2026-10-30 11:31:20"
+  "updated_at": "2026-11-01 14:52:21"
 }
