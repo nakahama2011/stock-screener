@@ -13,6 +13,12 @@
       "n_conditions": 3
     },
     {
+      "conditions": "出来高比≥1.5 + 高値圏(20日HH 3%以内) + 火〜木曜",
+      "count": 65,
+      "win_rate": 100.0,
+      "n_conditions": 3
+    },
+    {
       "conditions": "前日陽線 + 押し目(プルバック) + 高値圏(20日HH 3%以内)",
       "count": 39,
       "win_rate": 100.0,
@@ -170,12 +176,6 @@
     },
     {
       "conditions": "当日陰線 + 押し目(プルバック) + 前日大陰線",
-      "count": 10,
-      "win_rate": 100.0,
-      "n_conditions": 3
-    },
-    {
-      "conditions": "押し目(プルバック) + 前日大陰線 + 火〜木曜",
       "count": 10,
       "win_rate": 100.0,
       "n_conditions": 3
@@ -365,9 +365,9 @@
   ],
   "overall": {
     "total_signals": 976,
-    "win_rate_5d": 93.8,
+    "win_rate_5d": 93.9,
     "win_rate_3d": 91.8,
-    "period": "2026-08-01 〜 2026-10-30",
+    "period": "2026-08-02 〜 2026-10-31",
     "next_day_2pct_rate": 18.9
   }
 }
